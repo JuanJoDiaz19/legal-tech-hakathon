@@ -17,6 +17,7 @@ import { AnalisisSection } from './sections/AnalisisSection';
 import { FuentesSection } from './sections/FuentesSection';
 import { ConsultaSection } from './sections/ConsultaSection';
 import { CaseHeader } from './sections/CaseHeader';
+import { DocumentosSection } from './sections/DocumentosSection';
 
 export type CasoRow = {
   id: string;
@@ -34,6 +35,17 @@ export type CasoRow = {
   created_at: string;
 };
 
+export type CaseDocument = {
+  id: string;
+  categoria: 'demanda' | 'pruebas' | 'anexos' | 'poderes';
+  storage_path: string;
+  filename: string;
+  mime_type: string | null;
+  size_bytes: number | null;
+  created_at: string;
+  uploaded_by: string;
+};
+
 type Estado =
   | { kind: 'inicial' }
   | { kind: 'procesando'; mensaje: string }
@@ -41,10 +53,16 @@ type Estado =
   | { kind: 'error'; mensaje: string }
   | { kind: 'interrumpido' };
 
-const TABS = ['memo', 'hechos', 'analisis', 'fuentes', 'consulta'] as const;
+const TABS = ['memo', 'hechos', 'analisis', 'documentos', 'fuentes', 'consulta'] as const;
 type Tab = (typeof TABS)[number];
 
-export function ResultadoView({ caso }: { caso: CasoRow }) {
+export function ResultadoView({
+  caso,
+  documents,
+}: {
+  caso: CasoRow;
+  documents: CaseDocument[];
+}) {
   const [estado, setEstado] = useState<Estado>(() => {
     if (caso.analysis_status === 'done' && caso.analysis) {
       return {
@@ -119,20 +137,26 @@ export function ResultadoView({ caso }: { caso: CasoRow }) {
         initialStatus={caso.status}
         createdAt={caso.created_at}
         hechos={hechosActuales}
+        topRight={<EstadoBadge estado={estado} />}
       />
 
-      <div className="flex items-center justify-end gap-2 flex-wrap">
-        {estado.kind === 'listo' && (
+      {estado.kind === 'listo' && (
+        <div className="flex items-center justify-end gap-2 flex-wrap">
           <DescargarPdfsBotones
             hechos={estado.hechos}
             analisis={estado.analisis}
             title={caso.title}
           />
-        )}
-        <EstadoBadge estado={estado} />
-      </div>
+        </div>
+      )}
 
       {estado.kind === 'procesando' && <ProcessingPanel mensaje={estado.mensaje} />}
+
+      {estado.kind !== 'listo' && documents.length > 0 && (
+        <div className="bg-surface border border-line rounded-[var(--radius-card)] p-6 md:p-8">
+          <DocumentosSection documents={documents} />
+        </div>
+      )}
 
       {estado.kind === 'interrumpido' && (
         <div className="bg-surface border border-line rounded-[var(--radius-card)] p-6">
@@ -213,6 +237,7 @@ export function ResultadoView({ caso }: { caso: CasoRow }) {
               {tab === 'memo' && <MemoSection markdown={estado.memo} />}
               {tab === 'hechos' && <HechosSection hechos={estado.hechos} />}
               {tab === 'analisis' && <AnalisisSection analisis={estado.analisis} />}
+              {tab === 'documentos' && <DocumentosSection documents={documents} />}
               {tab === 'fuentes' && (
                 <FuentesSection fuentes={estado.analisis?.fuentes} />
               )}
@@ -244,6 +269,8 @@ function tabLabel(t: Tab): string {
       return 'Hechos';
     case 'analisis':
       return 'Análisis jurídico';
+    case 'documentos':
+      return 'Documentos';
     case 'fuentes':
       return 'Fuentes';
     case 'consulta':
@@ -286,6 +313,15 @@ function tabIcon(t: Tab) {
           <path d="M5 9l-2 4 2 4 2-4z" />
           <path d="M19 9l-2 4 2 4 2-4z" />
           <path d="M5 7h14" />
+        </svg>
+      );
+    case 'documentos':
+      return (
+        <svg {...props}>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="9" y1="15" x2="15" y2="15" />
+          <line x1="9" y1="18" x2="13" y2="18" />
         </svg>
       );
     case 'fuentes':

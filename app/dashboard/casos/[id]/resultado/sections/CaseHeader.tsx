@@ -27,9 +27,9 @@ const ESTADOS: readonly Estado[] = [
 ];
 
 const ESTADO_TONE: Record<Estado, string> = {
-  Activo: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30',
-  'En revisión': 'bg-amber-500/10 text-amber-300 border-amber-500/30',
-  'Pendiente de contestación': 'bg-blue-500/10 text-blue-300 border-blue-500/30',
+  Activo: 'bg-accent-soft text-accent border-accent-line',
+  'En revisión': 'bg-accent-soft text-accent border-accent-line',
+  'Pendiente de contestación': 'bg-accent-soft text-accent border-accent-line',
   Cerrado: 'bg-bg text-fg-faint border-line',
 };
 
@@ -74,9 +74,17 @@ interface Props {
   initialStatus: string;
   createdAt: string;
   hechos?: AnalisisHechos;
+  topRight?: React.ReactNode;
 }
 
-export function CaseHeader({ initialTitle, client, initialStatus, createdAt, hechos }: Props) {
+export function CaseHeader({
+  initialTitle,
+  client,
+  initialStatus,
+  createdAt,
+  hechos,
+  topRight,
+}: Props) {
   const derivedTitle = useMemo(() => deriveTitle(hechos, initialTitle), [hechos, initialTitle]);
 
   const [titleOverride, setTitleOverride] = useState<string | null>(null);
@@ -159,7 +167,10 @@ export function CaseHeader({ initialTitle, client, initialStatus, createdAt, hec
           )}
         </div>
 
-        <EstadoSelector value={estado} onChange={setEstado} />
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          {topRight}
+          <EstadoSelector value={estado} onChange={setEstado} />
+        </div>
       </div>
 
       <div className="flex flex-wrap items-start gap-x-16 gap-y-8 py-4 border-y border-line/60">

@@ -1,3 +1,7 @@
+'use client';
+
+import { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import type {
   AnalisisJuridico,
   RegimenAnalisis,
@@ -44,6 +48,13 @@ const VINCULACION_LABEL: Record<string, string> = {
 };
 
 export function AnalisisSection({ analisis }: { analisis?: AnalisisJuridico | null }) {
+  const [openMap, setOpenMap] = useState<Record<string, boolean>>({
+    regimen: true,
+    exoneracion: true,
+    perjuicio: true,
+    terceros: true,
+  });
+
   if (!analisis) {
     return <p className="text-sm text-fg-muted">No hay análisis jurídico disponible.</p>;
   }
@@ -55,12 +66,74 @@ export function AnalisisSection({ analisis }: { analisis?: AnalisisJuridico | nu
     );
   }
 
+  const visibleKeys: string[] = [];
+  if (analisis.regimen) visibleKeys.push('regimen');
+  if (analisis.exoneracion) visibleKeys.push('exoneracion');
+  if (analisis.perjuicio) visibleKeys.push('perjuicio');
+  if (analisis.terceros) visibleKeys.push('terceros');
+
+  const allOpen = visibleKeys.every((k) => openMap[k]);
+  const allClosed = visibleKeys.every((k) => !openMap[k]);
+
+  const toggle = (key: string) =>
+    setOpenMap((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  const setAll = (open: boolean) => {
+    const next: Record<string, boolean> = { ...openMap };
+    for (const k of visibleKeys) next[k] = open;
+    setOpenMap(next);
+  };
+
   return (
-    <div className="flex flex-col gap-8">
-      {analisis.regimen && <RegimenCard regimen={analisis.regimen} />}
-      {analisis.exoneracion && <ExoneracionCard exoneracion={analisis.exoneracion} />}
-      {analisis.perjuicio && <PerjuicioCard perjuicio={analisis.perjuicio} />}
-      {analisis.terceros && <TercerosCard terceros={analisis.terceros} />}
+    <div className="flex flex-col gap-5">
+      <div className="flex items-center justify-end gap-1.5 -mb-2">
+        <button
+          type="button"
+          onClick={() => setAll(true)}
+          disabled={allOpen}
+          className="text-[11px] font-semibold uppercase tracking-[0.08em] text-fg-muted hover:text-fg transition-colors disabled:opacity-40 disabled:cursor-default px-2 py-1"
+        >
+          Expandir todo
+        </button>
+        <span aria-hidden className="text-fg-faint">·</span>
+        <button
+          type="button"
+          onClick={() => setAll(false)}
+          disabled={allClosed}
+          className="text-[11px] font-semibold uppercase tracking-[0.08em] text-fg-muted hover:text-fg transition-colors disabled:opacity-40 disabled:cursor-default px-2 py-1"
+        >
+          Colapsar todo
+        </button>
+      </div>
+
+      {analisis.regimen && (
+        <RegimenCard
+          regimen={analisis.regimen}
+          open={openMap.regimen}
+          onToggle={() => toggle('regimen')}
+        />
+      )}
+      {analisis.exoneracion && (
+        <ExoneracionCard
+          exoneracion={analisis.exoneracion}
+          open={openMap.exoneracion}
+          onToggle={() => toggle('exoneracion')}
+        />
+      )}
+      {analisis.perjuicio && (
+        <PerjuicioCard
+          perjuicio={analisis.perjuicio}
+          open={openMap.perjuicio}
+          onToggle={() => toggle('perjuicio')}
+        />
+      )}
+      {analisis.terceros && (
+        <TercerosCard
+          terceros={analisis.terceros}
+          open={openMap.terceros}
+          onToggle={() => toggle('terceros')}
+        />
+      )}
     </div>
   );
 }
@@ -69,7 +142,15 @@ export function AnalisisSection({ analisis }: { analisis?: AnalisisJuridico | nu
 // Régimen
 // =============================================================================
 
-function RegimenCard({ regimen }: { regimen: RegimenAnalisis }) {
+function RegimenCard({
+  regimen,
+  open,
+  onToggle,
+}: {
+  regimen: RegimenAnalisis;
+  open: boolean;
+  onToggle: () => void;
+}) {
   const label =
     regimen.etiqueta_legible ??
     REGIMEN_LABEL[regimen.regimen ?? ''] ??
@@ -79,7 +160,7 @@ function RegimenCard({ regimen }: { regimen: RegimenAnalisis }) {
     ? REGIMEN_LABEL[regimen.regimen_alternativo] ?? regimen.regimen_alternativo
     : null;
   return (
-    <StepCard step={1} title="Régimen de responsabilidad">
+    <StepCard step={1} title="Régimen de responsabilidad" open={open} onToggle={onToggle}>
       <div className="flex flex-col gap-5">
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center px-3 h-8 text-sm font-semibold bg-accent-soft text-fg border border-accent-line rounded-[var(--radius-button)]">
@@ -168,7 +249,15 @@ function RegimenCard({ regimen }: { regimen: RegimenAnalisis }) {
 // Exoneración
 // =============================================================================
 
-function ExoneracionCard({ exoneracion }: { exoneracion: ExoneracionAnalisis }) {
+function ExoneracionCard({
+  exoneracion,
+  open,
+  onToggle,
+}: {
+  exoneracion: ExoneracionAnalisis;
+  open: boolean;
+  onToggle: () => void;
+}) {
   const nexo = exoneracion.elementos_nexo;
   const causales = exoneracion.causales_exoneracion ?? [];
   const nexoItems: Array<[string, string | undefined]> = [
@@ -179,7 +268,7 @@ function ExoneracionCard({ exoneracion }: { exoneracion: ExoneracionAnalisis }) 
   ];
 
   return (
-    <StepCard step={2} title="Nexo causal y exoneración">
+    <StepCard step={2} title="Nexo causal y exoneración" open={open} onToggle={onToggle}>
       <div className="flex flex-col gap-6">
         {nexo && (
           <div>
@@ -250,10 +339,18 @@ function CausalRow({
 // Perjuicio
 // =============================================================================
 
-function PerjuicioCard({ perjuicio }: { perjuicio: PerjuicioAnalisis }) {
+function PerjuicioCard({
+  perjuicio,
+  open,
+  onToggle,
+}: {
+  perjuicio: PerjuicioAnalisis;
+  open: boolean;
+  onToggle: () => void;
+}) {
   const rubros = perjuicio.rubros ?? [];
   return (
-    <StepCard step={3} title="Cuestionamiento del perjuicio">
+    <StepCard step={3} title="Cuestionamiento del perjuicio" open={open} onToggle={onToggle}>
       <div className="flex flex-col gap-5">
         {rubros.length > 0 ? (
           <div className="flex flex-col gap-3">
@@ -335,10 +432,18 @@ function RubroRow({ rubro }: { rubro: RubroPerjuicio }) {
 // Terceros
 // =============================================================================
 
-function TercerosCard({ terceros }: { terceros: TercerosAnalisis }) {
+function TercerosCard({
+  terceros,
+  open,
+  onToggle,
+}: {
+  terceros: TercerosAnalisis;
+  open: boolean;
+  onToggle: () => void;
+}) {
   const vinculaciones = terceros.vinculaciones ?? [];
   return (
-    <StepCard step={4} title="Vinculación de terceros">
+    <StepCard step={4} title="Vinculación de terceros" open={open} onToggle={onToggle}>
       <div className="flex flex-col gap-5">
         {vinculaciones.length > 0 ? (
           <div className="flex flex-col gap-3">
@@ -400,26 +505,49 @@ function StepCard({
   step,
   title,
   children,
+  open,
+  onToggle,
 }: {
   step: number;
   title: string;
   children: React.ReactNode;
+  open: boolean;
+  onToggle: () => void;
 }) {
+  const contentId = `step-card-${step}`;
   return (
     <section className="relative bg-gradient-to-b from-surface/60 to-bg/50 border border-line rounded-[var(--radius-card)] p-5 md:p-7 transition-colors hover:border-accent-line/60">
       <span
         aria-hidden
         className="absolute left-0 top-6 bottom-6 w-px bg-gradient-to-b from-accent/70 via-line to-transparent"
       />
-      <header className="flex items-center gap-3 mb-6 pb-4 border-b border-line">
-        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-bold text-fg bg-accent-soft border border-accent-line rounded-full tabular-nums">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        aria-controls={contentId}
+        className={`w-full group flex items-center gap-3 text-left ${
+          open ? 'mb-6 pb-4 border-b border-line' : ''
+        }`}
+      >
+        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-bold text-fg bg-accent-soft border border-accent-line rounded-full tabular-nums shrink-0">
           {step}
         </span>
-        <h3 className="text-base md:text-lg font-semibold text-fg tracking-tight">
+        <h3 className="flex-1 text-base md:text-lg font-semibold text-fg tracking-tight">
           {title}
         </h3>
-      </header>
-      {children}
+        <span
+          className={`inline-flex items-center justify-center w-7 h-7 text-fg-muted group-hover:text-fg transition-all duration-300 ${
+            open ? 'rotate-180' : 'rotate-0'
+          }`}
+          aria-hidden
+        >
+          <ChevronDown className="w-4 h-4" strokeWidth={2} />
+        </span>
+      </button>
+      <div id={contentId} hidden={!open}>
+        {children}
+      </div>
     </section>
   );
 }
@@ -545,7 +673,7 @@ function SoporteBadge({ soporte }: { soporte?: string }) {
       label: 'Sin soporte',
     },
     no_cuantificado: {
-      tone: 'bg-purple-500/10 text-purple-300 border-purple-500/30',
+      tone: 'bg-bg text-fg-muted border-line',
       label: 'Sin cuantificar',
     },
   };

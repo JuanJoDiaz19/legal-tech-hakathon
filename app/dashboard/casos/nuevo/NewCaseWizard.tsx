@@ -154,8 +154,75 @@ export function NewCaseWizard() {
       if (error || !data) {
         throw new Error(error?.message ?? 'No se pudo crear el caso en la base de datos.');
       }
-      setDraft(data.id, draft);
-      router.push(`/dashboard/casos/${data.id}/resultado`);
+
+      const caseId = data.id as string;
+      const userId = userData.user.id;
+      const uploadedPaths: string[] = [];
+      const documentRows: Array<{
+        case_id: string;
+        categoria: 'demanda' | 'pruebas' | 'anexos' | 'poderes';
+        storage_path: string;
+        filename: string;
+        mime_type: string | null;
+        size_bytes: number;
+        uploaded_by: string;
+      }> = [];
+
+      const categoryFiles: Array<{ categoria: 'demanda' | 'pruebas' | 'anexos' | 'poderes'; files: File[] }> = [
+        { categoria: 'demanda', files: draft.demanda },
+        { categoria: 'pruebas', files: draft.prueba },
+        { categoria: 'anexos', files: draft.anexos },
+        { categoria: 'poderes', files: draft.poderes },
+      ];
+
+      try {
+        for (const { categoria, files } of categoryFiles) {
+          for (const file of files) {
+            const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, '_').slice(0, 120);
+            const storagePath = `${userId}/${caseId}/${categoria}/${crypto.randomUUID()}-${safeName}`;
+            const { error: uploadErr } = await supabase.storage
+              .from('case-documents')
+              .upload(storagePath, file, {
+                contentType: file.type || undefined,
+                upsert: false,
+              });
+            if (uploadErr) {
+              throw new Error(`No se pudo subir "${file.name}": ${uploadErr.message}`);
+            }
+            uploadedPaths.push(storagePath);
+            documentRows.push({
+              case_id: caseId,
+              categoria,
+              storage_path: storagePath,
+              filename: file.name,
+              mime_type: file.type || null,
+              size_bytes: file.size,
+              uploaded_by: userId,
+            });
+          }
+        }
+
+        if (documentRows.length > 0) {
+          const { error: insertDocsErr } = await supabase
+            .from('case_documents')
+            .insert(documentRows);
+          if (insertDocsErr) {
+            throw new Error(
+              `Archivos subidos pero falló el registro en base de datos: ${insertDocsErr.message}`,
+            );
+          }
+        }
+      } catch (uploadFlowErr) {
+        // Rollback: borrar objetos subidos y el caso recién creado.
+        if (uploadedPaths.length > 0) {
+          await supabase.storage.from('case-documents').remove(uploadedPaths);
+        }
+        await supabase.from('cases').delete().eq('id', caseId);
+        throw uploadFlowErr;
+      }
+
+      setDraft(caseId, draft);
+      router.push(`/dashboard/casos/${caseId}/resultado`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error desconocido al crear el caso.';
       setSubmitError(msg);

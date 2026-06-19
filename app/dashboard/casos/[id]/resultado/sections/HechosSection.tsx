@@ -10,11 +10,11 @@ type Rubro = { rubro?: string; monto?: string | null; soporte?: string | null };
 type Cuantia = { monto_total?: string | null; rubros?: Rubro[] };
 
 const TIPO_CASO_TONE: Record<string, string> = {
-  transito: 'bg-blue-500/10 text-blue-300 border-blue-500/30',
-  actividad_peligrosa: 'bg-amber-500/10 text-amber-300 border-amber-500/30',
-  medica: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30',
-  producto: 'bg-purple-500/10 text-purple-300 border-purple-500/30',
-  otro: 'bg-bg text-fg-muted border-line',
+  transito: 'bg-accent-soft text-accent border-accent-line',
+  actividad_peligrosa: 'bg-accent-soft text-accent border-accent-line',
+  medica: 'bg-accent-soft text-accent border-accent-line',
+  producto: 'bg-accent-soft text-accent border-accent-line',
+  otro: 'bg-accent-soft text-accent border-accent-line',
 };
 
 const PRUEBA_TIPO_LABEL: Record<string, string> = {
@@ -261,7 +261,7 @@ function PartesColumn({
   items: string[];
   tone: 'emerald' | 'rose';
 }) {
-  const dot = tone === 'emerald' ? 'bg-emerald-400' : 'bg-rose-400';
+  const dot = tone === 'emerald' ? 'bg-accent' : 'bg-accent/50';
   return (
     <div className="bg-surface border border-line rounded-[var(--radius-button)] p-3">
       <div className="flex items-center gap-2 mb-2">
