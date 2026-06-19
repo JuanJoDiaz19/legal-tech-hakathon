@@ -1,19 +1,23 @@
-import { SiteNav } from '@/components/site/SiteNav';
-import { Hero } from '@/components/site/Hero';
-import { PracticeAreas } from '@/components/site/PracticeAreas';
-import { Team } from '@/components/site/Team';
-import { Clients } from '@/components/site/Clients';
-import { SiteFooter } from '@/components/site/SiteFooter';
+import { Navbar } from '@/components/landing/Navbar';
+import { HeroSection } from '@/components/landing/HeroSection';
+import { ProblemSolutionSection } from '@/components/landing/ProblemSolutionSection';
+import { FeaturesGrid } from '@/components/landing/FeaturesGrid';
+import { TrustSection } from '@/components/landing/TrustSection';
+import { FinalCTA } from '@/components/landing/FinalCTA';
+import { Footer } from '@/components/landing/Footer';
 
 export default function Home() {
   return (
-    <div style={{ background: 'var(--color-bg)', minHeight: '100vh' }}>
-      <SiteNav />
-      <Hero />
-      <PracticeAreas />
-      <Team />
-      <Clients />
-      <SiteFooter />
-    </div>
+    <>
+      <Navbar />
+      <main>
+        <HeroSection />
+        <ProblemSolutionSection />
+        <FeaturesGrid />
+        <TrustSection />
+        <FinalCTA />
+      </main>
+      <Footer />
+    </>
   );
 }
