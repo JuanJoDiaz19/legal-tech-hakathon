@@ -15,14 +15,6 @@ export function FinalCTA() {
           Acceso por invitación. Disponible para abogados de HGD y clientes corporativos
           autorizados.
         </p>
-        <div className="mt-10 inline-flex items-center justify-center gap-3 flex-wrap">
-          <button
-            type="button"
-            className="h-[54px] inline-flex items-center px-8 bg-fg text-accent border border-fg rounded-[var(--radius-button)] text-base font-semibold tracking-[0.01em] transition-colors hover:bg-[#e8e8e3] hover:border-[#e8e8e3] focus-visible:outline-fg"
-          >
-            Solicitar acceso
-          </button>
-        </div>
       </div>
     </section>
   );

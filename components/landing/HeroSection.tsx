@@ -9,28 +9,21 @@ export function HeroSection() {
             Responsabilidad civil extracontractual · Defensa estratégica
           </span>
           <h1 className="text-[2rem] md:text-[2.5rem] lg:text-5xl font-bold leading-[1.08] tracking-[-0.025em] text-fg max-w-[600px]">
-            Del expediente a la <em className="not-italic text-accent italic">estrategia defensiva</em> en
-            minutos
+            Del expediente a la{' '}
+            <span className="relative inline-block">
+              <em className="not-italic text-accent italic">estrategia defensiva</em>
+              <span
+                aria-hidden
+                className="pointer-events-none absolute left-0 right-0 -bottom-1 h-[2px] bg-accent origin-left animate-underline-draw"
+              />
+            </span>{' '}
+            en minutos
           </h1>
           <p className="mt-6 text-base md:text-lg leading-[1.65] text-fg-muted max-w-[600px]">
             Mobius analiza demandas de responsabilidad civil extracontractual, identifica el
             régimen de responsabilidad aplicable, detecta causales de exoneración y cuestiona la
             valoración del perjuicio — antes de que el abogado abra el primer folio.
           </p>
-          <div className="flex flex-wrap gap-3 mt-10">
-            <button
-              type="button"
-              className="h-[52px] inline-flex items-center px-7 bg-accent text-fg border border-accent rounded-[var(--radius-button)] text-base font-semibold transition-colors hover:bg-accent-hover hover:border-accent-hover"
-            >
-              Solicitar acceso
-            </button>
-            <button
-              type="button"
-              className="h-[52px] inline-flex items-center px-7 bg-transparent text-fg border border-fg/20 rounded-[var(--radius-button)] text-base font-medium transition-colors hover:border-fg/45 hover:bg-fg/5"
-            >
-              Ver demostración
-            </button>
-          </div>
         </div>
 
         <div className="relative aspect-[1024/710] overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">

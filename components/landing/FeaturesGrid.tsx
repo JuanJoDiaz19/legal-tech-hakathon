@@ -1,9 +1,12 @@
+import Image from 'next/image';
 import type { ReactNode } from 'react';
 
 interface Feature {
   icon: ReactNode;
   title: string;
   desc: string;
+  image: string;
+  imageAlt: string;
 }
 
 const ICON_PROPS = {
@@ -27,6 +30,8 @@ const FEATURES: readonly Feature[] = [
     ),
     title: 'Régimen de responsabilidad',
     desc: 'Determina si la demanda fundamenta responsabilidad subjetiva (culpa probada) u objetiva (actividad peligrosa, riesgo creado). Define la carga de la prueba y el estándar defensivo.',
+    image: '/features/regimen.png',
+    imageAlt: 'Dos páginas de un código legal contrastadas por una IA, con párrafos delimitados y tarjetas de análisis al margen',
   },
   {
     icon: (
@@ -37,6 +42,8 @@ const FEATURES: readonly Feature[] = [
     ),
     title: 'Causales de exoneración',
     desc: 'Identifica indicios de culpa exclusiva de la víctima, fuerza mayor, caso fortuito o hecho determinante de un tercero en los hechos y pruebas aportados con la demanda.',
+    image: '/features/exoneracion.png',
+    imageAlt: 'Página de una demanda con tres párrafos resaltados y tarjetas flotantes que identifican causales de exoneración',
   },
   {
     icon: (
@@ -48,6 +55,8 @@ const FEATURES: readonly Feature[] = [
     ),
     title: 'Cuestionamiento del perjuicio',
     desc: 'Revisa daño emergente, lucro cesante, daño moral y daño a la vida de relación. Señala conceptos sobrevalorados, periodos no acreditados o bases de cálculo cuestionables.',
+    image: '/features/perjuicio.png',
+    imageAlt: 'Tabla de perjuicios con cifras tachadas en tinta oxblood y chips de recalculo conectados por vectores',
   },
   {
     icon: (
@@ -60,6 +69,8 @@ const FEATURES: readonly Feature[] = [
     ),
     title: 'Vinculación de terceros',
     desc: 'Detecta fabricantes, contratistas, empleadores u otras personas que deban ser llamadas en garantía o demandadas conjuntamente.',
+    image: '/features/terceros.png',
+    imageAlt: 'Dossier central de demanda conectado por hilos a cuatro documentos periféricos que representan terceros vinculables',
   },
 ] as const;
 
@@ -87,13 +98,25 @@ export function FeaturesGrid() {
           {FEATURES.map((f) => (
             <article
               key={f.title}
-              className="group bg-surface border border-line rounded-[var(--radius-card)] p-7 transition-colors hover:border-l-2 hover:border-l-accent hover:pl-[27px]"
+              className="group bg-surface border border-line rounded-[var(--radius-card)] overflow-hidden transition-colors hover:border-fg-muted"
             >
-              <span className="inline-flex items-center justify-center w-9 h-9 text-accent bg-accent-soft rounded mb-5">
-                {f.icon}
-              </span>
-              <h3 className="text-lg font-semibold tracking-tight text-fg mb-2.5">{f.title}</h3>
-              <p className="text-[0.9375rem] leading-relaxed text-fg-muted">{f.desc}</p>
+              <div className="relative aspect-[16/9] bg-bg border-b border-line overflow-hidden">
+                <Image
+                  src={f.image}
+                  alt={f.imageAlt}
+                  fill
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                  className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                />
+              </div>
+
+              <div className="p-7">
+                <span className="inline-flex items-center justify-center w-9 h-9 text-accent bg-accent-soft rounded mb-5">
+                  {f.icon}
+                </span>
+                <h3 className="text-lg font-semibold tracking-tight text-fg mb-2.5">{f.title}</h3>
+                <p className="text-[0.9375rem] leading-relaxed text-fg-muted">{f.desc}</p>
+              </div>
             </article>
           ))}
         </div>

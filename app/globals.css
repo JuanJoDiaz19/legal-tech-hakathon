@@ -21,6 +21,44 @@
 
   --default-transition-duration: 200ms;
   --default-transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-step-in: step-in 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-file-in: file-in 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-pulse-seal: pulse-seal 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-underline-draw: underline-draw 800ms cubic-bezier(0.22, 1, 0.36, 1) 350ms both;
+  --animate-check-draw: check-draw 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-reveal-up: reveal-up 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes step-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes file-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-seal {
+  0% { box-shadow: 0 0 0 0 rgba(128, 24, 23, 0.55); }
+  70% { box-shadow: 0 0 0 10px rgba(128, 24, 23, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(128, 24, 23, 0); }
+}
+
+@keyframes underline-draw {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes check-draw {
+  from { stroke-dashoffset: 28; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @layer base {

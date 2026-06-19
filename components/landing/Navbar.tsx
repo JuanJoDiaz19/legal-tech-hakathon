@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 interface NavLink {
   href: string;
@@ -15,11 +16,12 @@ const LINKS: readonly NavLink[] = [
 
 const BTN_GHOST =
   'h-[38px] inline-flex items-center px-4 bg-transparent text-fg-muted border border-line rounded-[var(--radius-button)] text-sm font-medium transition-colors hover:text-fg hover:border-fg-muted';
-const BTN_PRIMARY =
-  'h-[38px] inline-flex items-center px-4 bg-accent text-fg border border-accent rounded-[var(--radius-button)] text-sm font-semibold transition-colors hover:bg-accent-hover hover:border-accent-hover';
 
-export function Navbar() {
+export function Navbar({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
   const [open, setOpen] = useState(false);
+
+  const ctaHref = isLoggedIn ? '/dashboard' : '/login';
+  const ctaLabel = isLoggedIn ? 'Ver casos' : 'Iniciar sesión';
 
   return (
     <>
@@ -60,12 +62,9 @@ export function Navbar() {
           </div>
 
           <div className="hidden lg:flex items-center gap-3">
-            <button type="button" className={BTN_GHOST}>
-              Iniciar sesión
-            </button>
-            <button type="button" className={BTN_PRIMARY}>
-              Solicitar acceso
-            </button>
+            <Link href={ctaHref} className={BTN_GHOST}>
+              {ctaLabel}
+            </Link>
           </div>
 
           <button
@@ -105,12 +104,13 @@ export function Navbar() {
               </a>
             ))}
             <div className="flex flex-col gap-2 mt-3">
-              <button type="button" className={BTN_GHOST}>
-                Iniciar sesión
-              </button>
-              <button type="button" className={BTN_PRIMARY}>
-                Solicitar acceso
-              </button>
+              <Link
+                href={ctaHref}
+                onClick={() => setOpen(false)}
+                className={BTN_GHOST}
+              >
+                {ctaLabel}
+              </Link>
             </div>
           </div>
         </div>
