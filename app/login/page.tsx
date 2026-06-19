@@ -21,21 +21,21 @@ export default async function LoginPage() {
         <div className="flex flex-col items-center gap-4 mb-8">
           <Image
             src="/logo-hgd.webp"
-            alt="Hurtado Gandini Davalos"
+            alt="Hurtado Gandini"
             width={144}
             height={32}
             priority
             className="h-8 w-auto"
           />
           <span className="font-wordmark text-3xl font-medium tracking-tight text-fg leading-none">
-            Mobius
+            Elenchos
           </span>
         </div>
 
         <div className="bg-surface border border-line rounded-[var(--radius-card)] p-8">
           <h1 className="text-xl font-semibold text-fg mb-1">Iniciar sesión</h1>
           <p className="text-sm text-fg-muted mb-6">
-            Acceso restringido al equipo HGD.
+            Acceso restringido al equipo de Hurtado Gandini.
           </p>
           <LoginForm />
         </div>

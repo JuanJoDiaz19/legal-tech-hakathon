@@ -11,6 +11,7 @@ interface NavLink {
 }
 
 const LINKS: readonly NavLink[] = [
+  { href: '#quienes-somos', label: 'Quiénes somos' },
   { href: '#como-funciona', label: 'Cómo funciona' },
   { href: '#analisis', label: 'Análisis' },
 ] as const;
@@ -62,12 +63,12 @@ export function Navbar({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
         <div className="max-w-[1280px] mx-auto h-[68px] md:h-[76px] flex items-center justify-between">
           <a
             href="#top"
-            aria-label="Mobius — Hurtado Gandini Davalos"
+            aria-label="Elenchos — Hurtado Gandini"
             className="inline-flex items-center gap-4"
           >
             <Image
               src="/logo-hgd.webp"
-              alt="Hurtado Gandini Davalos"
+              alt="Hurtado Gandini"
               width={144}
               height={32}
               priority
@@ -75,7 +76,7 @@ export function Navbar({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
             />
             <span aria-hidden className="w-px h-[22px] bg-white/20" />
             <span className="font-wordmark text-[1.625rem] md:text-[1.875rem] font-medium tracking-tight text-fg leading-none">
-              Mobius
+              Elenchos
             </span>
           </a>
 

@@ -2,6 +2,8 @@ import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
 import { Navbar } from '@/components/landing/Navbar';
 import { HeroSection } from '@/components/landing/HeroSection';
+import { QuienesSomosSection } from '@/components/landing/QuienesSomosSection';
+import { ComoFuncionaSection } from '@/components/landing/ComoFuncionaSection';
 import { ProblemSolutionSection } from '@/components/landing/ProblemSolutionSection';
 import { FeaturesGrid } from '@/components/landing/FeaturesGrid';
 import { TrustSection } from '@/components/landing/TrustSection';
@@ -20,6 +22,8 @@ export default async function Home() {
       <Navbar isLoggedIn={!!user} />
       <main>
         <HeroSection />
+        <QuienesSomosSection />
+        <ComoFuncionaSection />
         <ProblemSolutionSection />
         <FeaturesGrid />
         <TrustSection />

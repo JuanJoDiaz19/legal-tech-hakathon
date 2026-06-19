@@ -31,7 +31,7 @@ export default async function DashboardPage() {
           <div className="inline-flex items-center gap-4">
             <Image
               src="/logo-hgd.webp"
-              alt="Hurtado Gandini Davalos"
+              alt="Hurtado Gandini"
               width={144}
               height={32}
               priority
@@ -39,7 +39,7 @@ export default async function DashboardPage() {
             />
             <span aria-hidden className="w-px h-[22px] bg-line" />
             <span className="font-wordmark text-[1.625rem] md:text-[1.875rem] font-medium tracking-tight text-fg leading-none">
-              Mobius
+              Elenchos
             </span>
           </div>
 
@@ -50,10 +50,25 @@ export default async function DashboardPage() {
       <section className="px-6 md:px-12 xl:px-24 pt-10 md:pt-14 pb-6">
         <div className="max-w-[1280px] mx-auto">
           <h1 className="font-wordmark text-4xl md:text-5xl font-medium tracking-tight text-fg mb-3">
-            Hola, {user.email}
+            {(() => {
+              const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+              const fullName =
+                (meta.full_name as string | undefined) ??
+                (meta.name as string | undefined) ??
+                undefined;
+              const firstName = fullName?.trim().split(/\s+/)[0];
+              const gender = meta.gender as 'F' | 'M' | undefined;
+              const saludo =
+                gender === 'F'
+                  ? 'Bienvenida, estimada'
+                  : gender === 'M'
+                  ? 'Bienvenido, estimado'
+                  : 'Bienvenido(a), estimado(a)';
+              return firstName ? `${saludo} ${firstName}` : 'Bienvenido(a)';
+            })()}
           </h1>
           <p className="text-base text-fg-muted">
-            Tu panel de Mobius. Aquí construiremos el flujo de análisis.
+            Tu panel de Elenchos. Aquí gestionas el análisis jurídico estratégico de tus casos.
           </p>
         </div>
       </section>

@@ -15,6 +15,8 @@ import { MemoSection } from './sections/MemoSection';
 import { HechosSection } from './sections/HechosSection';
 import { AnalisisSection } from './sections/AnalisisSection';
 import { FuentesSection } from './sections/FuentesSection';
+import { ConsultaSection } from './sections/ConsultaSection';
+import { CaseHeader } from './sections/CaseHeader';
 
 export type CasoRow = {
   id: string;
@@ -39,7 +41,7 @@ type Estado =
   | { kind: 'error'; mensaje: string }
   | { kind: 'interrumpido' };
 
-const TABS = ['memo', 'hechos', 'analisis', 'fuentes'] as const;
+const TABS = ['memo', 'hechos', 'analisis', 'fuentes', 'consulta'] as const;
 type Tab = (typeof TABS)[number];
 
 export function ResultadoView({ caso }: { caso: CasoRow }) {
@@ -107,29 +109,27 @@ export function ResultadoView({ caso }: { caso: CasoRow }) {
     })();
   }, [caso.id, caso.analysis_status]);
 
+  const hechosActuales = estado.kind === 'listo' ? estado.hechos : caso.analysis?.hechos;
+
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-fg mb-1">
-            {caso.title}
-          </h1>
-          <p className="text-sm text-fg-muted">
-            {caso.client ? `Cliente: ${caso.client} · ` : ''}
-            Estado: {caso.status} · Creado{' '}
-            {new Date(caso.created_at).toLocaleDateString('es-CO')}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap justify-end">
-          {estado.kind === 'listo' && (
-            <DescargarPdfsBotones
-              hechos={estado.hechos}
-              analisis={estado.analisis}
-              title={caso.title}
-            />
-          )}
-          <EstadoBadge estado={estado} />
-        </div>
+    <div className="flex flex-col gap-10">
+      <CaseHeader
+        initialTitle={caso.title}
+        client={caso.client}
+        initialStatus={caso.status}
+        createdAt={caso.created_at}
+        hechos={hechosActuales}
+      />
+
+      <div className="flex items-center justify-end gap-2 flex-wrap">
+        {estado.kind === 'listo' && (
+          <DescargarPdfsBotones
+            hechos={estado.hechos}
+            analisis={estado.analisis}
+            title={caso.title}
+          />
+        )}
+        <EstadoBadge estado={estado} />
       </div>
 
       {estado.kind === 'procesando' && <ProcessingPanel mensaje={estado.mensaje} />}
@@ -216,6 +216,13 @@ export function ResultadoView({ caso }: { caso: CasoRow }) {
               {tab === 'fuentes' && (
                 <FuentesSection fuentes={estado.analisis?.fuentes} />
               )}
+              {tab === 'consulta' && (
+                <ConsultaSection
+                  hechos={estado.hechos}
+                  analisis={estado.analisis}
+                  caseTitle={caso.title}
+                />
+              )}
             </div>
             {estado.analisis?.disclaimer && (
               <p className="text-xs text-fg-faint italic">
@@ -239,6 +246,8 @@ function tabLabel(t: Tab): string {
       return 'Análisis jurídico';
     case 'fuentes':
       return 'Fuentes';
+    case 'consulta':
+      return 'Consultar análisis';
   }
 }
 
@@ -286,6 +295,13 @@ function tabIcon(t: Tab) {
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
         </svg>
       );
+    case 'consulta':
+      return (
+        <svg {...props}>
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          <path d="M8 10h.01M12 10h.01M16 10h.01" />
+        </svg>
+      );
   }
 }
 
@@ -316,12 +332,60 @@ function EstadoBadge({ estado }: { estado: Estado }) {
   );
 }
 
+const PROCESSING_STEPS = [
+  'Procesando expediente…',
+  'Identificando hechos relevantes…',
+  'Analizando fuentes jurídicas…',
+  'Construyendo matriz de riesgos…',
+  'Cuantificando perjuicios…',
+  'Generando insumos estratégicos…',
+] as const;
+
 function ProcessingPanel({ mensaje }: { mensaje: string }) {
+  const [stepIdx, setStepIdx] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStepIdx((i) => (i + 1) % PROCESSING_STEPS.length);
+    }, 2200);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div className="bg-surface border border-line rounded-[var(--radius-card)] p-8 flex flex-col items-center gap-4">
-      <div className="w-10 h-10 border-2 border-line border-t-accent rounded-full animate-spin" />
-      <p className="text-sm text-fg-muted">{mensaje}</p>
-      <p className="text-xs text-fg-faint text-center max-w-md">
+    <div className="relative bg-gradient-to-br from-surface to-bg/80 border border-line rounded-[var(--radius-card)] p-10 flex flex-col items-center gap-5 overflow-hidden">
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(128,24,23,0.18),transparent_70%)] pointer-events-none"
+      />
+      <div className="relative">
+        <div className="w-14 h-14 border-2 border-line border-t-accent rounded-full animate-spin" />
+        <div className="absolute inset-1 border border-accent/30 rounded-full animate-pulse" />
+      </div>
+      <div className="relative flex flex-col items-center gap-2 min-h-[64px]">
+        <p className="text-sm font-semibold text-fg">{mensaje}</p>
+        <p
+          key={stepIdx}
+          className="text-[13px] text-accent transition-opacity duration-500"
+          style={{ animation: 'fadeIn 500ms ease' }}
+        >
+          {PROCESSING_STEPS[stepIdx]}
+        </p>
+      </div>
+      <div className="relative w-full max-w-sm flex flex-col gap-2">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="h-3 bg-bg border border-line rounded overflow-hidden relative"
+          >
+            <span
+              className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-accent/30 to-transparent animate-[shimmer_1.6s_infinite]"
+              style={{
+                animation: `shimmer 1.6s ${i * 0.2}s infinite linear`,
+              }}
+            />
+          </div>
+        ))}
+      </div>
+      <p className="relative text-xs text-fg-faint text-center max-w-md">
         Esto puede tardar entre 20 y 60 segundos según el tamaño de los archivos.
         No cierres la pestaña.
       </p>

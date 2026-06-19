@@ -1,8 +1,8 @@
-export function LiquidGlassCard() {
+export function HeroInfoCard() {
   return (
-    <div className="liquid-glass w-[200px] h-[200px] p-5 flex flex-col justify-between -translate-y-[50px]">
+    <div className="liquid-glass w-full md:w-[280px] p-5 shadow-[0_10px_30px_rgba(0,0,0,0.45)]">
       <span className="text-[10px] tracking-[0.25em] text-fg/70 font-semibold">[ 2025 ]</span>
-      <div>
+      <div className="mt-5">
         <p className="text-[15px] leading-tight text-fg">
           Desarrollado por{' '}
           <em className="font-wordmark italic font-medium">abogados</em> litigantes

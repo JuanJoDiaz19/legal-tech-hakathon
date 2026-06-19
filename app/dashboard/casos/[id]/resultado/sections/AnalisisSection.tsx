@@ -7,6 +7,7 @@ import type {
   TercerosAnalisis,
   Vinculacion,
 } from '@/lib/api';
+import { ViabilidadBar } from './ViabilidadBar';
 
 const REGIMEN_LABEL: Record<string, string> = {
   subjetiva_culpa_probada: 'Subjetiva · culpa probada',
@@ -144,7 +145,7 @@ function RegimenCard({ regimen }: { regimen: RegimenAnalisis }) {
               )}
             </div>
             {regimen.por_que_no_otro_regimen && (
-              <p className="text-sm leading-6 text-fg-muted">
+              <p className="text-sm leading-7 text-fg-muted text-justify">
                 {regimen.por_que_no_otro_regimen}
               </p>
             )}
@@ -223,10 +224,14 @@ function CausalRow({
 }) {
   const label = CAUSAL_LABEL[causal.causal ?? ''] ?? causal.causal ?? '—';
   return (
-    <div className="bg-bg border border-line rounded-[var(--radius-card)] p-4 flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h4 className="text-sm font-semibold text-fg">{label}</h4>
-        <ViabilidadBadge viabilidad={causal.viabilidad} />
+    <div className="bg-bg border border-line rounded-[var(--radius-card)] p-4 flex flex-col gap-4 transition-colors hover:border-fg-muted">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <h4 className="text-sm font-semibold text-fg pt-1">{label}</h4>
+        <ViabilidadBar
+          nivel={causal.viabilidad}
+          description="Probabilidad estimada de éxito de la causal con base en el material aportado."
+          compact
+        />
       </div>
       {causal.fundamento_factico && (
         <Field label="Fundamento fáctico">{causal.fundamento_factico}</Field>
@@ -356,9 +361,9 @@ function TercerosCard({ terceros }: { terceros: TercerosAnalisis }) {
 function VinculacionRow({ vinculacion }: { vinculacion: Vinculacion }) {
   const tipo = VINCULACION_LABEL[vinculacion.tipo ?? ''] ?? vinculacion.tipo ?? '—';
   return (
-    <div className="bg-bg border border-line rounded-[var(--radius-card)] p-4 flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-3">
+    <div className="bg-bg border border-line rounded-[var(--radius-card)] p-4 flex flex-col gap-4 transition-colors hover:border-fg-muted">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-center gap-3 pt-1">
           <span className="inline-flex items-center px-2 h-6 text-[11px] font-semibold uppercase tracking-wide border border-line bg-surface text-fg-muted rounded-[var(--radius-button)]">
             {tipo}
           </span>
@@ -366,7 +371,11 @@ function VinculacionRow({ vinculacion }: { vinculacion: Vinculacion }) {
             <span className="text-sm font-semibold text-fg">{vinculacion.destinatario}</span>
           )}
         </div>
-        <ViabilidadBadge viabilidad={vinculacion.viabilidad} />
+        <ViabilidadBar
+          nivel={vinculacion.viabilidad}
+          description="Probabilidad de éxito de la vinculación de este tercero al proceso."
+          compact
+        />
       </div>
       {vinculacion.justificacion && (
         <Field label="Justificación">{vinculacion.justificacion}</Field>
@@ -397,9 +406,13 @@ function StepCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className="bg-bg/50 border border-line rounded-[var(--radius-card)] p-5 md:p-6">
-      <header className="flex items-center gap-3 mb-5 pb-4 border-b border-line">
-        <span className="inline-flex items-center justify-center w-7 h-7 text-xs font-semibold text-fg bg-surface border border-line rounded-full">
+    <section className="relative bg-gradient-to-b from-surface/60 to-bg/50 border border-line rounded-[var(--radius-card)] p-5 md:p-7 transition-colors hover:border-accent-line/60">
+      <span
+        aria-hidden
+        className="absolute left-0 top-6 bottom-6 w-px bg-gradient-to-b from-accent/70 via-line to-transparent"
+      />
+      <header className="flex items-center gap-3 mb-6 pb-4 border-b border-line">
+        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-bold text-fg bg-accent-soft border border-accent-line rounded-full tabular-nums">
           {step}
         </span>
         <h3 className="text-base md:text-lg font-semibold text-fg tracking-tight">
@@ -462,7 +475,7 @@ function Field({
   return (
     <div>
       <FieldLabel>{label}</FieldLabel>
-      <p className={`text-sm leading-6 ${accent ? 'text-fg' : 'text-fg-muted'}`}>
+      <p className={`text-sm leading-7 text-justify ${accent ? 'text-fg' : 'text-fg-muted'}`}>
         {children}
       </p>
     </div>
@@ -495,7 +508,7 @@ function Callout({
       <p className="text-[11px] font-semibold uppercase tracking-wide text-fg-muted mb-1.5">
         {title}
       </p>
-      <p className="text-sm leading-6 text-fg">{children}</p>
+      <p className="text-sm leading-7 text-fg text-justify">{children}</p>
     </div>
   );
 }
@@ -512,23 +525,6 @@ function ConfianzaBadge({ nivel }: { nivel: string }) {
       className={`inline-flex items-center gap-1 px-2 h-6 text-[10px] font-semibold uppercase tracking-wide border rounded-[var(--radius-button)] ${tone}`}
     >
       Confianza: {nivel}
-    </span>
-  );
-}
-
-function ViabilidadBadge({ viabilidad }: { viabilidad?: string }) {
-  if (!viabilidad) return null;
-  const map: Record<string, string> = {
-    alta: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30',
-    media: 'bg-amber-500/10 text-amber-300 border-amber-500/30',
-    baja: 'bg-rose-500/10 text-rose-300 border-rose-500/30',
-  };
-  const tone = map[viabilidad] ?? 'bg-bg text-fg-muted border-line';
-  return (
-    <span
-      className={`inline-flex items-center gap-1 px-2 h-6 text-[10px] font-semibold uppercase tracking-wide border rounded-[var(--radius-button)] ${tone}`}
-    >
-      Viabilidad: {viabilidad}
     </span>
   );
 }

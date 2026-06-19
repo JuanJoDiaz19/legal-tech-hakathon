@@ -41,7 +41,7 @@ function CheckIcon() {
 export function ProblemSolutionSection() {
   return (
     <section
-      id="como-funciona"
+      id="el-cambio"
       aria-labelledby="ps-heading"
       className="relative px-6 md:px-12 xl:px-24 py-16 md:py-24 border-t border-line scroll-mt-[80px]"
     >
@@ -65,7 +65,7 @@ export function ProblemSolutionSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
           <div className="flex flex-col">
             <div className="mb-6 text-xs font-semibold tracking-[0.15em] uppercase text-fg-faint">
-              Sin Mobius
+              Sin Elenchos
             </div>
             <ul className="flex flex-col gap-[18px] list-none p-0 m-0">
               {PROBLEM.map((line) => (
@@ -84,7 +84,7 @@ export function ProblemSolutionSection() {
 
           <div className="flex flex-col pl-6 md:pl-8 border-l border-accent/60">
             <div className="mb-6 text-xs font-semibold tracking-[0.15em] uppercase text-accent">
-              Con Mobius
+              Con Elenchos
             </div>
             <ul className="flex flex-col gap-[18px] list-none p-0 m-0">
               {SOLUTION.map((line) => (

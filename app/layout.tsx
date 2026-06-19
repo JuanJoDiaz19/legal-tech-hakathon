@@ -10,9 +10,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Mobius — Análisis de demandas de responsabilidad civil extracontractual',
+  title: 'Elenchos — Análisis jurídico estratégico de Hurtado Gandini',
   description:
-    'Herramienta de IA jurídica de Hurtado Gandini Davalos para análisis estratégico de demandas de responsabilidad civil extracontractual. Régimen aplicable, causales de exoneración, valoración del perjuicio y vinculación de terceros.',
+    'Elenchos es la herramienta de análisis jurídico estratégico de Hurtado Gandini. Asiste a los abogados en la identificación de riesgos, líneas de defensa, cuantificación de perjuicios, fuentes relevantes y criterios de viabilidad.',
 };
 
 export default function RootLayout({

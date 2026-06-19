@@ -21,7 +21,7 @@ const components: Components = {
     <h4 className="text-sm font-semibold text-fg mt-5 mb-1.5">{children}</h4>
   ),
   p: ({ children }) => (
-    <p className="text-[15px] leading-7 text-fg my-3">{children}</p>
+    <p className="text-[15px] leading-7 text-fg my-3 text-justify">{children}</p>
   ),
   ul: ({ children }) => (
     <ul className="list-disc pl-6 my-3 flex flex-col gap-1.5 text-[15px] leading-7 text-fg marker:text-fg-faint">
@@ -39,7 +39,7 @@ const components: Components = {
   ),
   em: ({ children }) => <em className="italic text-fg">{children}</em>,
   blockquote: ({ children }) => (
-    <blockquote className="my-4 pl-4 border-l-2 border-accent bg-bg/40 py-2 pr-3 text-[15px] leading-7 text-fg-muted italic rounded-r-[var(--radius-button)]">
+    <blockquote className="my-4 pl-4 border-l-2 border-accent bg-bg/40 py-2 pr-3 text-[15px] leading-7 text-fg-muted italic rounded-r-[var(--radius-button)] text-justify">
       {children}
     </blockquote>
   ),
@@ -99,7 +99,7 @@ export function MemoSection({ markdown }: { markdown: string | null }) {
     );
   }
   return (
-    <article className="max-w-3xl">
+    <article className="max-w-3xl prose-justify">
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
         {markdown}
       </ReactMarkdown>

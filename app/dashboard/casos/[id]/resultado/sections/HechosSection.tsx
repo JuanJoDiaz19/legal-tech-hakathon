@@ -50,7 +50,7 @@ export function HechosSection({ hechos }: { hechos?: AnalisisHechos }) {
     <div className="flex flex-col gap-8">
       {hechos.resumen_factico && (
         <Card title="Resumen fáctico">
-          <p className="text-[15px] leading-7 text-fg">{hechos.resumen_factico}</p>
+          <p className="text-[15px] leading-7 text-fg text-justify">{hechos.resumen_factico}</p>
         </Card>
       )}
 
@@ -304,7 +304,7 @@ function HechoItem({
         {!isLast && <span className="flex-1 w-px bg-line my-1" />}
       </div>
       <div className={`flex-1 ${isLast ? 'pb-0' : 'pb-5'}`}>
-        <p className="text-[15px] leading-7 text-fg">{texto}</p>
+        <p className="text-[15px] leading-7 text-fg text-justify">{texto}</p>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
           {hecho.fecha && (
             <span className="inline-flex items-center gap-1 text-[11px] text-fg-muted">
@@ -334,53 +334,122 @@ function Source({ fuente }: { fuente: string }) {
   );
 }
 
+function parseMonto(value: string | number | null | undefined): number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'number') return value;
+  const digits = value.replace(/[^\d,.-]/g, '').replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.');
+  const n = Number(digits);
+  return Number.isFinite(n) ? n : null;
+}
+
+function formatCOP(n: number): string {
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    maximumFractionDigits: 0,
+  }).format(n);
+}
+
+const SOPORTE_TONE: Record<string, { label: string; className: string }> = {
+  si: { label: 'Soportado', className: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30' },
+  soportado: { label: 'Soportado', className: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30' },
+  parcial: { label: 'Parcial', className: 'bg-amber-500/10 text-amber-300 border-amber-500/30' },
+  discutible: { label: 'Discutible', className: 'bg-amber-500/10 text-amber-300 border-amber-500/30' },
+  no: { label: 'Sin soporte', className: 'bg-rose-500/10 text-rose-300 border-rose-500/30' },
+};
+
 function CuantiaBlock({ cuantia }: { cuantia: Cuantia | string | number }) {
   if (typeof cuantia === 'string' || typeof cuantia === 'number') {
     return <p className="text-lg font-semibold text-fg">{String(cuantia)}</p>;
   }
   const rubros = cuantia.rubros ?? [];
+  const subtotal = rubros.reduce((acc, r) => {
+    const n = parseMonto(r.monto);
+    return n ? acc + n : acc;
+  }, 0);
+  const showSubtotal = subtotal > 0;
+
   return (
     <div className="flex flex-col gap-4">
       {cuantia.monto_total && (
-        <div className="flex items-baseline gap-2">
+        <div className="flex items-baseline gap-3 bg-accent-soft border border-accent-line rounded-[var(--radius-button)] px-4 py-3">
           <span className="text-[11px] font-semibold uppercase tracking-wide text-fg-muted">
-            Monto total
+            Monto total reclamado
           </span>
-          <span className="text-xl font-semibold text-fg tabular-nums">
-            {cuantia.monto_total}
+          <span className="text-2xl font-bold text-fg tabular-nums">
+            {(() => {
+              const n = parseMonto(cuantia.monto_total);
+              return n !== null ? formatCOP(n) : cuantia.monto_total;
+            })()}
           </span>
         </div>
       )}
       {rubros.length > 0 && (
-        <div className="overflow-hidden rounded-[var(--radius-button)] border border-line">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-[var(--radius-button)] border border-line">
+          <table className="w-full text-sm min-w-[640px]">
             <thead className="bg-bg">
               <tr>
-                <th className="text-left text-[11px] font-semibold uppercase tracking-wide text-fg-muted px-3 py-2">
-                  Rubro
+                <th className="text-left text-[11px] font-semibold uppercase tracking-wide text-fg-muted px-3 py-2.5">
+                  Concepto
                 </th>
-                <th className="text-right text-[11px] font-semibold uppercase tracking-wide text-fg-muted px-3 py-2 w-40">
-                  Monto
+                <th className="text-right text-[11px] font-semibold uppercase tracking-wide text-fg-muted px-3 py-2.5 w-44">
+                  Valor reclamado
                 </th>
-                <th className="text-left text-[11px] font-semibold uppercase tracking-wide text-fg-muted px-3 py-2">
+                <th className="text-left text-[11px] font-semibold uppercase tracking-wide text-fg-muted px-3 py-2.5 w-36">
                   Soporte
+                </th>
+                <th className="text-left text-[11px] font-semibold uppercase tracking-wide text-fg-muted px-3 py-2.5">
+                  Observación
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
-              {rubros.map((r, idx) => (
-                <tr key={idx}>
-                  <td className="px-3 py-2.5 text-[14px] text-fg">
-                    {RUBRO_LABEL[r.rubro ?? ''] ?? r.rubro ?? '—'}
+              {rubros.map((r, idx) => {
+                const n = parseMonto(r.monto);
+                const soporteKey = (r.soporte ?? '').toLowerCase();
+                const soporte = SOPORTE_TONE[soporteKey];
+                return (
+                  <tr key={idx} className="hover:bg-bg/40 transition-colors">
+                    <td className="px-3 py-3 text-[14px] text-fg font-medium">
+                      {RUBRO_LABEL[r.rubro ?? ''] ?? r.rubro ?? '—'}
+                    </td>
+                    <td className="px-3 py-3 text-right text-[14px] text-fg tabular-nums font-semibold">
+                      {n !== null ? formatCOP(n) : r.monto ?? '—'}
+                    </td>
+                    <td className="px-3 py-3">
+                      {soporte ? (
+                        <span
+                          className={`inline-flex items-center px-2 h-6 text-[10px] font-semibold uppercase tracking-wide border rounded-[var(--radius-button)] ${soporte.className}`}
+                        >
+                          {soporte.label}
+                        </span>
+                      ) : r.soporte ? (
+                        <span className="text-[13px] text-fg-muted">{r.soporte}</span>
+                      ) : (
+                        <span className="text-[13px] text-fg-faint">—</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-3 text-[13px] text-fg-muted leading-snug text-justify">
+                      {!n ? 'Valor sin cuantificar en la demanda' : '—'}
+                    </td>
+                  </tr>
+                );
+              })}
+              {showSubtotal && (
+                <tr className="bg-bg/60">
+                  <td className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-fg-muted">
+                    Subtotal calculado
                   </td>
-                  <td className="px-3 py-2.5 text-right text-[14px] text-fg tabular-nums">
-                    {r.monto ?? '—'}
+                  <td className="px-3 py-3 text-right text-[14px] text-fg tabular-nums font-bold">
+                    {formatCOP(subtotal)}
                   </td>
-                  <td className="px-3 py-2.5 text-[13px] text-fg-muted">
-                    {r.soporte ?? '—'}
+                  <td className="px-3 py-3" colSpan={2}>
+                    <span className="text-[11px] text-fg-faint italic">
+                      Suma de los rubros con valor identificado; verificable por el abogado.
+                    </span>
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

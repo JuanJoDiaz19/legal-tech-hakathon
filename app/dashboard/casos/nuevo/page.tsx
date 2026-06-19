@@ -26,7 +26,7 @@ export default async function NewCasePage() {
           <Link href="/dashboard" className="inline-flex items-center gap-4">
             <Image
               src="/logo-hgd.webp"
-              alt="Hurtado Gandini Davalos"
+              alt="Hurtado Gandini"
               width={144}
               height={32}
               priority
@@ -34,7 +34,7 @@ export default async function NewCasePage() {
             />
             <span aria-hidden className="w-px h-[22px] bg-line" />
             <span className="font-wordmark text-[1.625rem] md:text-[1.875rem] font-medium tracking-tight text-fg leading-none">
-              Mobius
+              Elenchos
             </span>
           </Link>
 

@@ -209,6 +209,16 @@ function GroupBlock({
   );
 }
 
+function detectarEnlace(texto: string): { tipo: 'url' | 'pdf' | 'none'; href: string | null } {
+  const urlMatch = texto.match(/https?:\/\/\S+/);
+  if (urlMatch) {
+    const href = urlMatch[0].replace(/[.,;)\]]+$/, '');
+    const isPdf = /\.pdf(\?|$)/i.test(href);
+    return { tipo: isPdf ? 'pdf' : 'url', href };
+  }
+  return { tipo: 'none', href: null };
+}
+
 function FuenteCard({
   id,
   fuente,
@@ -218,26 +228,64 @@ function FuenteCard({
   fuente: Fuente;
   accent: string;
 }) {
+  const enlace = detectarEnlace(fuente.fuente);
+
   return (
-    <li className="bg-bg border border-line rounded-[var(--radius-card)] p-4 flex gap-3 hover:border-fg-muted transition-colors">
+    <li className="group bg-bg border border-line rounded-[var(--radius-card)] p-4 flex flex-col sm:flex-row gap-3 transition-all duration-200 hover:border-accent-line hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(0,0,0,0.3)]">
       <span
         className={`shrink-0 inline-flex items-center justify-center min-w-10 h-7 px-2 text-[11px] font-mono font-semibold border rounded-[var(--radius-button)] ${accent}`}
       >
         {id.replace(/^\[|\]$/g, '')}
       </span>
       <div className="flex-1 min-w-0">
-        <p className="text-[14px] leading-6 text-fg break-words">{fuente.fuente}</p>
-        {fuente.pagina !== undefined && fuente.pagina !== null && fuente.pagina !== '' && (
-          <p className="text-[11px] text-fg-faint mt-1.5 inline-flex items-center gap-1">
-            <PageIcon />
-            <span>
-              {typeof fuente.pagina === 'number' ? 'Página' : 'Sección'}{' '}
-              {fuente.pagina}
+        <p className="text-[14px] leading-6 text-fg break-words text-justify">{fuente.fuente}</p>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-2">
+          {fuente.pagina !== undefined && fuente.pagina !== null && fuente.pagina !== '' && (
+            <span className="text-[11px] text-fg-faint inline-flex items-center gap-1">
+              <PageIcon />
+              {typeof fuente.pagina === 'number' ? 'Página' : 'Sección'} {fuente.pagina}
             </span>
-          </p>
-        )}
+          )}
+          {enlace.tipo === 'none' ? (
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-fg-faint bg-bg border border-line px-2 h-5 rounded-[var(--radius-button)]">
+              <span className="inline-block w-1 h-1 rounded-full bg-fg-faint" />
+              Fuente no vinculada
+            </span>
+          ) : null}
+        </div>
       </div>
+      {enlace.href && (
+        <a
+          href={enlace.href}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="shrink-0 self-start inline-flex items-center gap-2 h-9 px-3 text-[12px] font-semibold border border-accent-line text-accent bg-accent-soft rounded-[var(--radius-button)] transition-colors hover:bg-accent hover:text-fg hover:border-accent"
+        >
+          {enlace.tipo === 'pdf' ? <DownloadIcon /> : <ExternalLinkIcon />}
+          {enlace.tipo === 'pdf' ? 'Abrir documento' : 'Ver fuente'}
+        </a>
+      )}
     </li>
+  );
+}
+
+function ExternalLinkIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      <polyline points="15 3 21 3 21 9" />
+      <line x1="10" y1="14" x2="21" y2="3" />
+    </svg>
+  );
+}
+
+function DownloadIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
   );
 }
 
