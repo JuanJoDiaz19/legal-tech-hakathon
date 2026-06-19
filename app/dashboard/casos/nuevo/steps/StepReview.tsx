@@ -13,12 +13,27 @@ const SECTIONS: Array<{ key: keyof WizardDraft; label: string; required: boolean
   { key: 'poderes', label: 'Poderes', required: false },
 ];
 
-export function StepReview({ draft }: { draft: WizardDraft }) {
+export function StepReview({
+  draft,
+  titulo,
+  onTituloChange,
+  cliente,
+  onClienteChange,
+  error,
+}: {
+  draft: WizardDraft;
+  titulo: string;
+  onTituloChange: (v: string) => void;
+  cliente: string;
+  onClienteChange: (v: string) => void;
+  error?: string | null;
+}) {
   const totalFiles = SECTIONS.reduce((sum, s) => sum + draft[s.key].length, 0);
   const totalBytes = SECTIONS.reduce(
     (sum, s) => sum + draft[s.key].reduce((b, f) => b + f.size, 0),
     0,
   );
+  const tituloPlaceholder = draft.demanda[0]?.name ?? 'Nuevo caso';
 
   return (
     <div className="flex flex-col gap-5">
@@ -29,6 +44,43 @@ export function StepReview({ draft }: { draft: WizardDraft }) {
           {totalFiles === 1 ? '' : 's'} en total · {formatBytes(totalBytes)}.
         </p>
       </div>
+
+      <div className="flex flex-col gap-3 bg-bg border border-line rounded-[var(--radius-card)] p-4">
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-semibold uppercase tracking-wide text-fg-muted">
+            Título del caso
+          </span>
+          <input
+            type="text"
+            value={titulo}
+            onChange={(e) => onTituloChange(e.target.value)}
+            placeholder={tituloPlaceholder}
+            className="h-10 px-3 bg-surface border border-line rounded-[var(--radius-button)] text-sm text-fg placeholder:text-fg-faint focus:outline-none focus:border-accent"
+          />
+          <span className="text-[11px] text-fg-faint">
+            Si lo dejas vacío, usamos el nombre del archivo de la demanda.
+          </span>
+        </label>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-semibold uppercase tracking-wide text-fg-muted">
+            Cliente (opcional)
+          </span>
+          <input
+            type="text"
+            value={cliente}
+            onChange={(e) => onClienteChange(e.target.value)}
+            placeholder="Nombre del cliente o parte demandada"
+            className="h-10 px-3 bg-surface border border-line rounded-[var(--radius-button)] text-sm text-fg placeholder:text-fg-faint focus:outline-none focus:border-accent"
+          />
+        </label>
+      </div>
+
+      {error && (
+        <div className="bg-bg border border-red-500/40 text-red-400 rounded-[var(--radius-card)] p-3 text-sm">
+          {error}
+        </div>
+      )}
 
       <div className="flex flex-col gap-3">
         {SECTIONS.map((section) => {

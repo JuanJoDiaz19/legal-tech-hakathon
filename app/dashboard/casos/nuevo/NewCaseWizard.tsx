@@ -1,6 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/utils/supabase/client';
+import { setDraft } from '@/lib/draftStore';
 import { Stepper } from './Stepper';
 import { FileUploadStep, type AcceptProfile } from './steps/FileUploadStep';
 import { StepReview } from './steps/StepReview';
@@ -95,14 +98,20 @@ const EMPTY_DRAFT: WizardDraft = {
 };
 
 export function NewCaseWizard() {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
-  const [draft, setDraft] = useState<WizardDraft>(EMPTY_DRAFT);
+  const [draft, setLocalDraft] = useState<WizardDraft>(EMPTY_DRAFT);
+  const [titulo, setTitulo] = useState('');
+  const [cliente, setCliente] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const isFirst = currentStep === 1;
   const isLast = currentStep === STEPS.length;
 
   const activeUpload = UPLOAD_STEPS.find((s) => s.id === currentStep);
   const canAdvance = activeUpload?.required ? draft[activeUpload.key].length > 0 : true;
+  const hasDemanda = draft.demanda.length > 0;
 
   function goNext() {
     if (!isLast && canAdvance) setCurrentStep((s) => s + 1);
@@ -113,7 +122,45 @@ export function NewCaseWizard() {
   }
 
   function updateFiles(key: keyof WizardDraft, files: File[]) {
-    setDraft((d) => ({ ...d, [key]: files }));
+    setLocalDraft((d) => ({ ...d, [key]: files }));
+  }
+
+  async function handleSubmit() {
+    if (submitting) return;
+    if (!hasDemanda) {
+      setSubmitError('Debes subir al menos un archivo en el paso "Demanda".');
+      return;
+    }
+    setSubmitError(null);
+    setSubmitting(true);
+    try {
+      const supabase = createClient();
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !userData.user) {
+        throw new Error('No hay sesión activa. Vuelve a iniciar sesión.');
+      }
+      const titleFinal = titulo.trim() || draft.demanda[0]?.name || 'Nuevo caso';
+      const { data, error } = await supabase
+        .from('cases')
+        .insert({
+          title: titleFinal,
+          client: cliente.trim() || null,
+          status: 'Activo',
+          analysis_status: 'pending',
+          created_by: userData.user.id,
+        })
+        .select('id')
+        .single();
+      if (error || !data) {
+        throw new Error(error?.message ?? 'No se pudo crear el caso en la base de datos.');
+      }
+      setDraft(data.id, draft);
+      router.push(`/dashboard/casos/${data.id}/resultado`);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error desconocido al crear el caso.';
+      setSubmitError(msg);
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -134,14 +181,23 @@ export function NewCaseWizard() {
             onFilesChange={(files) => updateFiles(activeUpload.key, files)}
           />
         )}
-        {isLast && <StepReview draft={draft} />}
+        {isLast && (
+          <StepReview
+            draft={draft}
+            titulo={titulo}
+            onTituloChange={setTitulo}
+            cliente={cliente}
+            onClienteChange={setCliente}
+            error={submitError}
+          />
+        )}
       </div>
 
       <div className="flex items-center justify-between gap-3">
         <button
           type="button"
           onClick={goBack}
-          disabled={isFirst}
+          disabled={isFirst || submitting}
           className={BTN_GHOST}
           aria-label="Paso anterior"
         >
@@ -166,12 +222,20 @@ export function NewCaseWizard() {
 
         <button
           type="button"
-          onClick={goNext}
-          disabled={isLast || !canAdvance}
+          onClick={isLast ? handleSubmit : goNext}
+          disabled={submitting || (!isLast && !canAdvance) || (isLast && !hasDemanda)}
           className={BTN_PRIMARY}
-          title={!canAdvance ? 'Debes subir al menos un archivo para continuar' : undefined}
+          title={
+            isLast
+              ? !hasDemanda
+                ? 'Debes subir la demanda antes de crear el caso'
+                : undefined
+              : !canAdvance
+              ? 'Debes subir al menos un archivo para continuar'
+              : undefined
+          }
         >
-          {isLast ? 'Crear caso' : 'Siguiente'}
+          {isLast ? (submitting ? 'Creando…' : 'Crear caso') : 'Siguiente'}
           {!isLast && (
             <svg
               width="14"

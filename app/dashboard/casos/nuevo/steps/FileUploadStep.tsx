@@ -2,8 +2,6 @@
 
 import { useRef, useState, type ChangeEvent, type DragEvent } from 'react';
 
-const MAX_FILE_SIZE_MB = 50;
-
 export const ACCEPT_PROFILES = {
   documents: {
     accept: '.pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.webp',
@@ -104,12 +102,6 @@ export function FileUploadStep({
   function addFiles(incoming: FileList | File[]) {
     const list = Array.from(incoming);
     const existingKeys = new Set(files.map(fileKey));
-    const tooBig = list.find((f) => f.size > MAX_FILE_SIZE_MB * 1024 * 1024);
-
-    if (tooBig) {
-      setError(`"${tooBig.name}" supera el máximo de ${MAX_FILE_SIZE_MB} MB.`);
-      return;
-    }
 
     setError(null);
     const deduped = list.filter((f) => !existingKeys.has(fileKey(f)));
@@ -231,9 +223,7 @@ export function FileUploadStep({
               </>
             )}
           </p>
-          <p className="text-xs text-fg-faint mt-1">
-            {profile.hint} · Máx {MAX_FILE_SIZE_MB} MB por archivo
-          </p>
+          <p className="text-xs text-fg-faint mt-1">{profile.hint}</p>
         </div>
         <input
           ref={inputRef}
