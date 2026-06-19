@@ -527,10 +527,10 @@ function StepCard({
         aria-expanded={open}
         aria-controls={contentId}
         className={`w-full group flex items-center gap-3 text-left ${
-          open ? 'mb-6 pb-4 border-b border-line' : ''
+          open ? 'mb-6 pb-4 border-b border-accent-line' : ''
         }`}
       >
-        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-bold text-fg bg-accent-soft border border-accent-line rounded-full tabular-nums shrink-0">
+        <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-bold text-fg bg-transparent border border-accent-line rounded-full tabular-nums shrink-0">
           {step}
         </span>
         <h3 className="flex-1 text-base md:text-lg font-semibold text-fg tracking-tight">

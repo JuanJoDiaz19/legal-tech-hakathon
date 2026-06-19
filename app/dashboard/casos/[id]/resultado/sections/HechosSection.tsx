@@ -1,3 +1,22 @@
+import {
+  Sparkles,
+  Tag,
+  Users,
+  ClipboardList,
+  AlertOctagon,
+  FileSearch,
+  Microscope,
+  Wallet,
+  AlertTriangle,
+  Calendar,
+  FileText,
+  Image as ImageIcon,
+  Mic,
+  UserCircle2,
+  FileQuestion,
+  Hash,
+  type LucideIcon,
+} from 'lucide-react';
 import type { AnalisisHechos } from '@/lib/api';
 
 type Hecho = { hecho?: string; descripcion?: string; fecha?: string | null; fuente?: string };
@@ -9,20 +28,21 @@ type TipoCaso = { categoria?: string; subtipo?: string; fundamento?: string };
 type Rubro = { rubro?: string; monto?: string | null; soporte?: string | null };
 type Cuantia = { monto_total?: string | null; rubros?: Rubro[] };
 
-const TIPO_CASO_TONE: Record<string, string> = {
-  transito: 'bg-accent-soft text-accent border-accent-line',
-  actividad_peligrosa: 'bg-accent-soft text-accent border-accent-line',
-  medica: 'bg-accent-soft text-accent border-accent-line',
-  producto: 'bg-accent-soft text-accent border-accent-line',
-  otro: 'bg-accent-soft text-accent border-accent-line',
-};
-
 const PRUEBA_TIPO_LABEL: Record<string, string> = {
   documento: 'Documento',
   peritaje: 'Peritaje',
   testimonio: 'Testimonio',
   audiovisual: 'Audiovisual',
   otro: 'Otro',
+};
+
+const PRUEBA_TIPO_ICON: Record<string, LucideIcon> = {
+  documento: FileText,
+  peritaje: Microscope,
+  testimonio: UserCircle2,
+  audiovisual: ImageIcon,
+  audio: Mic,
+  otro: FileQuestion,
 };
 
 const RUBRO_LABEL: Record<string, string> = {
@@ -34,7 +54,11 @@ const RUBRO_LABEL: Record<string, string> = {
 
 export function HechosSection({ hechos }: { hechos?: AnalisisHechos }) {
   if (!hechos) {
-    return <p className="text-sm text-fg-muted">No hay hechos extraídos.</p>;
+    return (
+      <div className="bg-bg/40 border border-dashed border-line rounded-[var(--radius-card)] p-10 text-center text-sm text-fg-muted">
+        No hay hechos extraídos.
+      </div>
+    );
   }
 
   const partes = hechos.partes as Partes | undefined;
@@ -46,160 +70,125 @@ export function HechosSection({ hechos }: { hechos?: AnalisisHechos }) {
   const cuantia = hechos.cuantia as Cuantia | string | number | undefined;
   const vacios = (hechos.vacios_o_dudas as (string | Record<string, unknown>)[] | undefined) ?? [];
 
-  return (
-    <div className="flex flex-col gap-8">
-      {hechos.resumen_factico && (
-        <Card title="Resumen fáctico">
-          <p className="text-[15px] leading-7 text-fg text-justify">{hechos.resumen_factico}</p>
-        </Card>
-      )}
+  const totalPartes =
+    (partes?.demandantes?.length ?? 0) + (partes?.demandados_potenciales?.length ?? 0);
+  const montoTotal =
+    typeof cuantia === 'object' && cuantia !== null && cuantia.monto_total
+      ? cuantia.monto_total
+      : typeof cuantia === 'string' || typeof cuantia === 'number'
+      ? String(cuantia)
+      : null;
 
-      {tipoCaso && (tipoCaso.categoria || tipoCaso.fundamento) && (
-        <Card title="Tipo de caso">
-          <div className="flex flex-col gap-3">
-            {tipoCaso.categoria && (
-              <div className="flex flex-wrap items-center gap-2">
-                <CategoriaBadge categoria={tipoCaso.categoria} />
-                {tipoCaso.subtipo && (
-                  <span className="text-sm text-fg-muted">{tipoCaso.subtipo}</span>
+  return (
+    <div className="flex flex-col gap-10">
+      {hechos.resumen_factico && <ResumenHero text={hechos.resumen_factico} />}
+
+      <StatsBar
+        items={[
+          { icon: ClipboardList, label: 'Hechos', value: listaHechos.length },
+          { icon: AlertOctagon, label: 'Daños', value: danos.length },
+          { icon: FileSearch, label: 'Pruebas', value: pruebas.length },
+          { icon: Users, label: 'Partes', value: totalPartes },
+        ]}
+        montoTotal={montoTotal}
+      />
+
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+        {tipoCaso && (tipoCaso.categoria || tipoCaso.fundamento) && (
+          <div className="lg:col-span-2">
+            <Card title="Tipo de caso" icon={Tag}>
+              <div className="flex flex-col gap-4">
+                {tipoCaso.categoria && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <CategoriaBadge categoria={tipoCaso.categoria} />
+                    {tipoCaso.subtipo && (
+                      <span className="text-sm text-fg-muted">{tipoCaso.subtipo}</span>
+                    )}
+                  </div>
+                )}
+                {tipoCaso.fundamento && (
+                  <blockquote className="relative text-[13px] leading-7 text-fg-muted italic pl-4 text-justify">
+                    <span
+                      aria-hidden
+                      className="absolute left-0 top-0 bottom-0 w-[2px] bg-accent rounded"
+                    />
+                    {tipoCaso.fundamento}
+                  </blockquote>
                 )}
               </div>
-            )}
-            {tipoCaso.fundamento && (
-              <blockquote className="text-sm leading-6 text-fg-muted italic border-l-2 border-accent pl-3 py-1">
-                {tipoCaso.fundamento}
-              </blockquote>
-            )}
+            </Card>
           </div>
-        </Card>
-      )}
+        )}
 
-      {partes && (partes.demandantes?.length || partes.demandados_potenciales?.length) ? (
-        <Card title="Partes">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <PartesColumn
-              label="Demandantes"
-              items={partes.demandantes ?? []}
-              tone="emerald"
-            />
-            <PartesColumn
-              label="Demandados potenciales"
-              items={partes.demandados_potenciales ?? []}
-              tone="rose"
-            />
+        {partes && (partes.demandantes?.length || partes.demandados_potenciales?.length) ? (
+          <div className="lg:col-span-3">
+            <Card title="Partes procesales" icon={Users}>
+              <PartesDuelo
+                demandantes={partes.demandantes ?? []}
+                demandados={partes.demandados_potenciales ?? []}
+              />
+            </Card>
           </div>
-        </Card>
-      ) : null}
+        ) : null}
+      </div>
 
       {listaHechos.length > 0 && (
-        <Card
-          title="Hechos relevantes"
-          counter={listaHechos.length}
-        >
-          <ol className="flex flex-col gap-0">
-            {listaHechos.map((h, idx) => (
-              <HechoItem key={idx} hecho={h} index={idx + 1} isLast={idx === listaHechos.length - 1} />
-            ))}
-          </ol>
+        <Card title="Hechos relevantes" icon={ClipboardList} counter={listaHechos.length}>
+          <Timeline hechos={listaHechos} />
         </Card>
       )}
 
       {danos.length > 0 && (
-        <Card title="Daños alegados" counter={danos.length}>
+        <Card title="Daños alegados" icon={AlertOctagon} counter={danos.length}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {danos.map((d, idx) => (
-              <div
-                key={idx}
-                className="bg-bg border border-line rounded-[var(--radius-button)] p-3 flex flex-col gap-1.5"
-              >
-                {d.tipo && (
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-fg-faint">
-                    {d.tipo}
-                  </span>
-                )}
-                <p className="text-sm leading-6 text-fg">
-                  {d.descripcion ?? '—'}
-                </p>
-                {d.fuente && <Source fuente={d.fuente} />}
-              </div>
+              <DanoCard key={idx} dano={d} />
             ))}
           </div>
         </Card>
       )}
 
       {pruebas.length > 0 && (
-        <Card title="Pruebas aportadas" counter={pruebas.length}>
-          <div className="overflow-hidden rounded-[var(--radius-button)] border border-line">
-            <table className="w-full text-sm">
-              <thead className="bg-bg">
-                <tr>
-                  <th className="text-left text-[11px] font-semibold uppercase tracking-wide text-fg-muted px-3 py-2 w-32">
-                    Tipo
-                  </th>
-                  <th className="text-left text-[11px] font-semibold uppercase tracking-wide text-fg-muted px-3 py-2">
-                    Descripción
-                  </th>
-                  <th className="text-left text-[11px] font-semibold uppercase tracking-wide text-fg-muted px-3 py-2 w-48">
-                    Fuente
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-line">
-                {pruebas.map((p, idx) => (
-                  <tr key={idx}>
-                    <td className="px-3 py-2.5 align-top">
-                      <span className="inline-flex items-center px-2 h-5 text-[10px] font-semibold uppercase tracking-wide border border-line rounded-[var(--radius-button)] text-fg-muted">
-                        {PRUEBA_TIPO_LABEL[p.tipo ?? ''] ?? p.tipo ?? 'Otro'}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5 align-top text-[14px] leading-6 text-fg">
-                      {p.descripcion ?? '—'}
-                    </td>
-                    <td className="px-3 py-2.5 align-top text-[12px] text-fg-faint break-all">
-                      {p.fuente ?? '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <Card title="Pruebas aportadas" icon={FileSearch} counter={pruebas.length}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {pruebas.map((p, idx) => (
+              <PruebaCard key={idx} prueba={p} />
+            ))}
           </div>
         </Card>
       )}
 
       {peritajes.length > 0 && (
-        <Card title="Peritajes" counter={peritajes.length}>
+        <Card title="Peritajes" icon={Microscope} counter={peritajes.length}>
           <div className="flex flex-col gap-3">
             {peritajes.map((p, idx) => (
-              <div
-                key={idx}
-                className="bg-bg border border-line rounded-[var(--radius-button)] p-4 flex flex-col gap-2"
-              >
-                {p.materia && (
-                  <h4 className="text-sm font-semibold text-fg">{p.materia}</h4>
-                )}
-                {p.conclusion && (
-                  <p className="text-sm leading-6 text-fg-muted">{p.conclusion}</p>
-                )}
-                {p.fuente && <Source fuente={p.fuente} />}
-              </div>
+              <PeritajeCard key={idx} peritaje={p} />
             ))}
           </div>
         </Card>
       )}
 
       {cuantia !== undefined && cuantia !== null && (
-        <Card title="Cuantía">
+        <Card title="Cuantía" icon={Wallet}>
           <CuantiaBlock cuantia={cuantia} />
         </Card>
       )}
 
       {vacios.length > 0 && (
-        <Card title="Vacíos o dudas" tone="warning">
-          <ul className="flex flex-col gap-2">
+        <Card title="Vacíos o dudas" icon={AlertTriangle} tone="warning">
+          <ul className="flex flex-col gap-2.5">
             {vacios.map((v, idx) => (
-              <li key={idx} className="flex items-start gap-2 text-sm leading-6 text-fg">
-                <span className="mt-1.5 inline-block w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-                <span>{typeof v === 'string' ? v : JSON.stringify(v)}</span>
+              <li
+                key={idx}
+                className="flex items-start gap-3 text-sm leading-6 text-fg bg-amber-500/5 border border-amber-500/20 rounded-[var(--radius-button)] p-3"
+              >
+                <AlertTriangle
+                  className="w-4 h-4 mt-0.5 text-amber-300 shrink-0"
+                  strokeWidth={1.8}
+                />
+                <span className="text-justify">
+                  {typeof v === 'string' ? v : JSON.stringify(v)}
+                </span>
               </li>
             ))}
           </ul>
@@ -209,13 +198,98 @@ export function HechosSection({ hechos }: { hechos?: AnalisisHechos }) {
   );
 }
 
+// =============================================================================
+// Hero — Resumen fáctico
+// =============================================================================
+
+function ResumenHero({ text }: { text: string }) {
+  return (
+    <section className="relative overflow-hidden bg-gradient-to-br from-surface/80 via-bg/40 to-bg border border-line rounded-[var(--radius-card)] p-6 md:p-8">
+      <div
+        aria-hidden
+        className="absolute -top-12 -right-12 w-[280px] h-[280px] bg-accent/10 blur-3xl pointer-events-none"
+      />
+      <div className="relative flex flex-col gap-4">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center justify-center w-8 h-8 rounded bg-transparent border border-accent-line text-fg">
+            <Sparkles className="w-4 h-4" strokeWidth={1.8} />
+          </span>
+          <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-fg">
+            Resumen fáctico
+          </h2>
+        </div>
+        <p className="text-[16px] md:text-[17px] leading-[1.8] text-fg text-justify">
+          {text}
+        </p>
+      </div>
+    </section>
+  );
+}
+
+// =============================================================================
+// Stats bar
+// =============================================================================
+
+function StatsBar({
+  items,
+  montoTotal,
+}: {
+  items: Array<{ icon: LucideIcon; label: string; value: number }>;
+  montoTotal: string | null;
+}) {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2.5 bg-bg/40 border border-line rounded-[var(--radius-card)] p-2.5">
+      {items.map(({ icon: Icon, label, value }) => (
+        <div
+          key={label}
+          className="group flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-button)] transition-colors hover:bg-surface/60"
+        >
+          <span className="inline-flex items-center justify-center w-9 h-9 rounded bg-accent-soft border border-accent-line text-accent">
+            <Icon className="w-4 h-4" strokeWidth={1.8} />
+          </span>
+          <div className="flex flex-col leading-none">
+            <span className="text-xl font-bold text-fg tabular-nums">{value}</span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-fg-faint mt-1">
+              {label}
+            </span>
+          </div>
+        </div>
+      ))}
+      {montoTotal && (
+        <div className="col-span-2 md:col-span-4 lg:col-span-1 flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-button)] bg-accent-soft/60 border border-accent-line">
+          <span className="inline-flex items-center justify-center w-9 h-9 rounded bg-accent text-fg">
+            <Wallet className="w-4 h-4" strokeWidth={1.8} />
+          </span>
+          <div className="flex flex-col leading-none min-w-0">
+            <span
+              className="text-sm font-bold text-fg tabular-nums truncate"
+              title={montoTotal}
+            >
+              {montoTotal}
+            </span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-fg-faint mt-1">
+              Cuantía total
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// =============================================================================
+// Card wrapper con icono
+// =============================================================================
+
 function Card({
   title,
+  icon: Icon,
   children,
   counter,
   tone,
 }: {
   title: string;
+  icon: LucideIcon;
   children: React.ReactNode;
   counter?: number;
   tone?: 'warning';
@@ -223,14 +297,29 @@ function Card({
   const border = tone === 'warning' ? 'border-amber-500/30' : 'border-line';
   return (
     <section
-      className={`bg-bg/50 border ${border} rounded-[var(--radius-card)] p-5 md:p-6`}
+      className={`relative bg-gradient-to-b from-surface/40 to-bg/30 border ${border} rounded-[var(--radius-card)] p-5 md:p-6 transition-colors hover:border-accent-line/60`}
     >
-      <header className="flex items-center justify-between gap-2 mb-4">
-        <h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-fg-muted">
-          {title}
-        </h3>
+      <header
+        className={`flex items-center justify-between gap-2 mb-5 pb-4 border-b ${
+          tone === 'warning' ? 'border-amber-500/40' : 'border-accent-line'
+        }`}
+      >
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span
+            className={`inline-flex items-center justify-center w-7 h-7 rounded border ${
+              tone === 'warning'
+                ? 'bg-transparent text-amber-300 border-amber-500/40'
+                : 'bg-transparent text-fg border-accent-line'
+            }`}
+          >
+            <Icon className="w-3.5 h-3.5" strokeWidth={1.8} />
+          </span>
+          <h3 className="text-[12px] font-bold uppercase tracking-[0.12em] text-fg truncate">
+            {title}
+          </h3>
+        </div>
         {counter !== undefined && (
-          <span className="inline-flex items-center justify-center min-w-6 h-5 px-1.5 text-[11px] font-semibold text-fg-muted bg-surface border border-line rounded-full">
+          <span className="inline-flex items-center justify-center min-w-7 h-6 px-2 text-[11px] font-bold tabular-nums text-fg bg-transparent border border-accent-line rounded-full">
             {counter}
           </span>
         )}
@@ -240,48 +329,90 @@ function Card({
   );
 }
 
+// =============================================================================
+// Categoria badge
+// =============================================================================
+
 function CategoriaBadge({ categoria }: { categoria: string }) {
-  const tone = TIPO_CASO_TONE[categoria] ?? TIPO_CASO_TONE.otro;
   const label = categoria.replace(/_/g, ' ');
   return (
-    <span
-      className={`inline-flex items-center px-2.5 h-6 text-[11px] font-semibold uppercase tracking-wide border rounded-[var(--radius-button)] ${tone}`}
-    >
+    <span className="inline-flex items-center gap-1.5 px-3 h-7 text-[12px] font-semibold uppercase tracking-wide bg-accent-soft text-accent border border-accent-line rounded-full">
+      <span className="inline-block w-1.5 h-1.5 rounded-full bg-accent" />
       {label}
     </span>
   );
 }
 
-function PartesColumn({
-  label,
-  items,
-  tone,
+// =============================================================================
+// Partes — duelo demandante vs demandado
+// =============================================================================
+
+function PartesDuelo({
+  demandantes,
+  demandados,
 }: {
-  label: string;
-  items: string[];
-  tone: 'emerald' | 'rose';
+  demandantes: string[];
+  demandados: string[];
 }) {
-  const dot = tone === 'emerald' ? 'bg-accent' : 'bg-accent/50';
   return (
-    <div className="bg-surface border border-line rounded-[var(--radius-button)] p-3">
-      <div className="flex items-center gap-2 mb-2">
-        <span className={`inline-block w-2 h-2 rounded-full ${dot}`} />
-        <h4 className="text-[11px] font-semibold uppercase tracking-wide text-fg-muted">
-          {label}
-        </h4>
+    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-4 items-stretch">
+      <PartesColumn label="Demandantes" items={demandantes} />
+      <div className="hidden md:flex flex-col items-center justify-center">
+        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-fg-faint">vs</span>
       </div>
+      <div className="md:hidden flex items-center justify-center">
+        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-fg-faint">vs</span>
+      </div>
+      <PartesColumn label="Demandados" items={demandados} />
+    </div>
+  );
+}
+
+function PartesColumn({ label, items }: { label: string; items: string[] }) {
+  return (
+    <div className="flex flex-col gap-2 min-w-0">
+      <h4 className="text-[10px] font-bold uppercase tracking-[0.12em] text-fg-faint">{label}</h4>
       {items.length === 0 ? (
         <p className="text-xs text-fg-faint italic">No identificados</p>
       ) : (
-        <ul className="flex flex-col gap-1">
+        <ul className="flex flex-col gap-1.5">
           {items.map((item, idx) => (
-            <li key={idx} className="text-sm text-fg">
-              {item}
+            <li
+              key={idx}
+              className="flex items-center gap-2 px-3 py-1.5 min-w-0 bg-bg border border-line rounded-full transition-colors hover:border-accent-line"
+            >
+              <UserCircle2 className="w-3.5 h-3.5 text-accent shrink-0" strokeWidth={1.6} />
+              <span className="text-[13px] text-fg truncate min-w-0" title={item}>
+                {item}
+              </span>
             </li>
           ))}
         </ul>
       )}
     </div>
+  );
+}
+
+// =============================================================================
+// Timeline de hechos
+// =============================================================================
+
+function Timeline({ hechos }: { hechos: Hecho[] }) {
+  return (
+    <ol className="relative flex flex-col gap-0">
+      <span
+        aria-hidden
+        className="absolute left-[11px] top-2 bottom-2 w-px bg-gradient-to-b from-accent via-line to-transparent"
+      />
+      {hechos.map((h, idx) => (
+        <HechoItem
+          key={idx}
+          hecho={h}
+          index={idx + 1}
+          isLast={idx === hechos.length - 1}
+        />
+      ))}
+    </ol>
   );
 }
 
@@ -296,43 +427,142 @@ function HechoItem({
 }) {
   const texto = hecho.hecho ?? hecho.descripcion ?? '—';
   return (
-    <li className="flex gap-3 relative">
-      <div className="flex flex-col items-center shrink-0">
-        <span className="w-6 h-6 mt-0.5 flex items-center justify-center text-[11px] font-semibold text-fg bg-surface border border-line rounded-full">
-          {index}
-        </span>
-        {!isLast && <span className="flex-1 w-px bg-line my-1" />}
-      </div>
-      <div className={`flex-1 ${isLast ? 'pb-0' : 'pb-5'}`}>
+    <li className="relative flex gap-4">
+      <span
+        className="relative z-10 shrink-0 w-6 h-6 mt-0.5 flex items-center justify-center text-[10px] font-bold text-accent bg-bg border-2 border-accent-line rounded-full tabular-nums"
+        aria-hidden
+      >
+        {index}
+      </span>
+      <div className={`flex-1 min-w-0 ${isLast ? 'pb-0' : 'pb-6'}`}>
         <p className="text-[15px] leading-7 text-fg text-justify">{texto}</p>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
-          {hecho.fecha && (
-            <span className="inline-flex items-center gap-1 text-[11px] text-fg-muted">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
-                <rect x="3" y="4" width="18" height="18" rx="2" />
-                <path d="M16 2v4M8 2v4M3 10h18" />
-              </svg>
-              {hecho.fecha}
-            </span>
-          )}
-          {hecho.fuente && <Source fuente={hecho.fuente} />}
-        </div>
+        {(hecho.fecha || hecho.fuente) && (
+          <div className="flex flex-wrap items-center gap-2 mt-2.5">
+            {hecho.fecha && (
+              <span className="inline-flex items-center gap-1.5 px-2 h-6 text-[11px] font-semibold text-fg bg-accent-soft border border-accent-line rounded-full">
+                <Calendar className="w-3 h-3" strokeWidth={2} />
+                {hecho.fecha}
+              </span>
+            )}
+            {hecho.fuente && <SourceBadge fuente={hecho.fuente} />}
+          </div>
+        )}
       </div>
     </li>
   );
 }
 
-function Source({ fuente }: { fuente: string }) {
+// =============================================================================
+// Daño card
+// =============================================================================
+
+function DanoCard({ dano }: { dano: Dano }) {
   return (
-    <span className="inline-flex items-center gap-1 text-[11px] text-fg-faint">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <path d="M14 2v6h6" />
-      </svg>
-      <span className="truncate max-w-[220px]">{fuente}</span>
+    <div className="group bg-bg border border-line rounded-[var(--radius-card)] p-4 flex flex-col gap-2 transition-all duration-200 hover:border-accent-line hover:-translate-y-0.5">
+      {dano.tipo && (
+        <span className="inline-flex items-center gap-1.5 self-start px-2 h-5 text-[10px] font-bold uppercase tracking-wide text-accent bg-accent-soft border border-accent-line rounded-full">
+          <AlertOctagon className="w-3 h-3" strokeWidth={2} />
+          {dano.tipo}
+        </span>
+      )}
+      <p className="text-[14px] leading-6 text-fg text-justify">{dano.descripcion ?? '—'}</p>
+      {dano.fuente && <SourceBadge fuente={dano.fuente} />}
+    </div>
+  );
+}
+
+// =============================================================================
+// Prueba card
+// =============================================================================
+
+function PruebaCard({ prueba }: { prueba: Prueba }) {
+  const tipoKey = (prueba.tipo ?? 'otro').toLowerCase();
+  const Icon = PRUEBA_TIPO_ICON[tipoKey] ?? FileQuestion;
+  const tipoLabel = PRUEBA_TIPO_LABEL[tipoKey] ?? prueba.tipo ?? 'Otro';
+
+  return (
+    <div className="group flex gap-3 bg-bg border border-line rounded-[var(--radius-card)] p-4 transition-all duration-200 hover:border-accent-line hover:-translate-y-0.5">
+      <span className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded bg-accent-soft text-accent border border-accent-line">
+        <Icon className="w-4 h-4" strokeWidth={1.8} />
+      </span>
+      <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+        <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-fg-faint">
+          {tipoLabel}
+        </span>
+        <p className="text-[14px] leading-6 text-fg text-justify">{prueba.descripcion ?? '—'}</p>
+        {prueba.fuente && <SourceBadge fuente={prueba.fuente} />}
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// Peritaje card
+// =============================================================================
+
+function PeritajeCard({ peritaje }: { peritaje: Peritaje }) {
+  return (
+    <div className="group bg-bg border border-line rounded-[var(--radius-card)] p-4 transition-all duration-200 hover:border-accent-line">
+      <div className="flex items-start gap-3">
+        <span className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded bg-accent-soft text-accent border border-accent-line">
+          <Microscope className="w-4 h-4" strokeWidth={1.8} />
+        </span>
+        <div className="flex-1 min-w-0 flex flex-col gap-2">
+          {peritaje.materia && (
+            <h4 className="text-[14px] font-semibold text-fg leading-tight">{peritaje.materia}</h4>
+          )}
+          {peritaje.conclusion && (
+            <p className="text-[13px] leading-6 text-fg-muted text-justify">{peritaje.conclusion}</p>
+          )}
+          {peritaje.fuente && <SourceBadge fuente={peritaje.fuente} />}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// Source con página detectada
+// =============================================================================
+
+function parseFuente(fuente: string): { documento: string; pagina: string | null } {
+  // Patrones: "demanda.pdf, p. 4", "demanda.pdf p.4", "demanda página 4", "fol. 12"
+  const patterns = [
+    /^(.+?)[,;\s]+(?:p(?:ág)?(?:ina)?\.?|fol(?:io)?\.?|hoja)\s*([\d-]+)\s*$/i,
+    /^(.+?)\s*[-—–]\s*p(?:ág)?(?:ina)?\.?\s*([\d-]+)\s*$/i,
+    /^(.+?)\s+#\s*([\d-]+)\s*$/,
+  ];
+  const trimmed = fuente.trim();
+  for (const re of patterns) {
+    const m = trimmed.match(re);
+    if (m) {
+      return { documento: m[1].trim(), pagina: m[2].trim() };
+    }
+  }
+  return { documento: trimmed, pagina: null };
+}
+
+function SourceBadge({ fuente }: { fuente: string }) {
+  const { documento, pagina } = parseFuente(fuente);
+  return (
+    <span className="inline-flex items-center gap-1.5 self-start max-w-full bg-bg border border-line rounded-full pl-2 pr-1 py-0.5 text-[11px] text-fg-muted transition-colors hover:border-fg-muted">
+      <FileText className="w-3 h-3 text-fg-faint shrink-0" strokeWidth={1.8} />
+      <span className="truncate max-w-[220px] text-fg-muted" title={documento}>
+        {documento}
+      </span>
+      {pagina && (
+        <span className="inline-flex items-center gap-0.5 px-1.5 h-5 rounded-full bg-accent-soft text-accent border border-accent-line font-bold tabular-nums">
+          <Hash className="w-2.5 h-2.5" strokeWidth={2.5} />
+          {pagina}
+        </span>
+      )}
     </span>
   );
 }
+
+// =============================================================================
+// Cuantía (sin cambios estructurales mayores)
+// =============================================================================
 
 function parseMonto(value: string | number | null | undefined): number | null {
   if (value === null || value === undefined) return null;
@@ -350,13 +580,44 @@ function formatCOP(n: number): string {
   }).format(n);
 }
 
-const SOPORTE_TONE: Record<string, { label: string; className: string }> = {
-  si: { label: 'Soportado', className: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30' },
-  soportado: { label: 'Soportado', className: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30' },
-  parcial: { label: 'Parcial', className: 'bg-amber-500/10 text-amber-300 border-amber-500/30' },
-  discutible: { label: 'Discutible', className: 'bg-amber-500/10 text-amber-300 border-amber-500/30' },
-  no: { label: 'Sin soporte', className: 'bg-rose-500/10 text-rose-300 border-rose-500/30' },
+type SoporteVariant = 'positive' | 'caution' | 'negative';
+
+const SOPORTE_TONE: Record<string, { label: string; variant: SoporteVariant }> = {
+  si: { label: 'Soportado', variant: 'positive' },
+  soportado: { label: 'Soportado', variant: 'positive' },
+  parcial: { label: 'Parcial', variant: 'caution' },
+  discutible: { label: 'Discutible', variant: 'caution' },
+  no: { label: 'Sin soporte', variant: 'negative' },
 };
+
+const SOPORTE_VARIANT_STYLES: Record<SoporteVariant, string> = {
+  positive: 'bg-emerald-500/10 text-emerald-300',
+  caution: 'bg-amber-500/10 text-amber-300',
+  negative: 'bg-rose-500/10 text-rose-300',
+};
+
+function SoporteChip({ soporte }: { soporte: string | null | undefined }) {
+  const key = (soporte ?? '').toLowerCase();
+  const cfg = SOPORTE_TONE[key];
+  if (!cfg) {
+    if (soporte) return <span className="text-[13px] text-fg-muted">{soporte}</span>;
+    return <span className="text-[13px] text-fg-faint">—</span>;
+  }
+  const dotClass =
+    cfg.variant === 'positive'
+      ? 'bg-emerald-400'
+      : cfg.variant === 'caution'
+      ? 'bg-amber-400'
+      : 'bg-rose-400';
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 h-6 text-[10px] font-bold uppercase tracking-wide rounded-full ${SOPORTE_VARIANT_STYLES[cfg.variant]}`}
+    >
+      <span aria-hidden className={`inline-block w-1.5 h-1.5 rounded-full ${dotClass}`} />
+      {cfg.label}
+    </span>
+  );
+}
 
 function CuantiaBlock({ cuantia }: { cuantia: Cuantia | string | number }) {
   if (typeof cuantia === 'string' || typeof cuantia === 'number') {
@@ -368,84 +629,123 @@ function CuantiaBlock({ cuantia }: { cuantia: Cuantia | string | number }) {
     return n ? acc + n : acc;
   }, 0);
   const showSubtotal = subtotal > 0;
+  const cuantificados = rubros.filter((r) => parseMonto(r.monto) !== null).length;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       {cuantia.monto_total && (
-        <div className="flex items-baseline gap-3 bg-accent-soft border border-accent-line rounded-[var(--radius-button)] px-4 py-3">
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-fg-muted">
-            Monto total reclamado
-          </span>
-          <span className="text-2xl font-bold text-fg tabular-nums">
-            {(() => {
-              const n = parseMonto(cuantia.monto_total);
-              return n !== null ? formatCOP(n) : cuantia.monto_total;
-            })()}
-          </span>
+        <div className="relative overflow-hidden bg-gradient-to-br from-accent-soft via-accent-soft/60 to-bg/30 border border-accent-line rounded-[var(--radius-card)] p-5 md:p-6">
+          <div
+            aria-hidden
+            className="absolute -top-12 -right-12 w-[220px] h-[220px] bg-accent/15 blur-3xl pointer-events-none"
+          />
+          <div className="relative flex items-start justify-between gap-4 flex-wrap">
+            <div className="flex flex-col gap-2 min-w-0">
+              <span className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-accent">
+                <Wallet className="w-3.5 h-3.5" strokeWidth={2} />
+                Monto total reclamado
+              </span>
+              <span className="text-[2rem] md:text-[2.5rem] font-bold leading-none text-fg tabular-nums tracking-tight">
+                {(() => {
+                  const n = parseMonto(cuantia.monto_total);
+                  return n !== null ? formatCOP(n) : cuantia.monto_total;
+                })()}
+              </span>
+            </div>
+            {rubros.length > 0 && (
+              <div className="flex flex-col items-end gap-1 text-right shrink-0">
+                <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-fg-faint">
+                  Conceptos
+                </span>
+                <span className="text-[1.25rem] font-bold leading-none text-fg tabular-nums">
+                  {rubros.length}
+                </span>
+                <span className="text-[11px] text-fg-muted">
+                  {cuantificados} cuantificado{cuantificados === 1 ? '' : 's'}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       )}
+
       {rubros.length > 0 && (
-        <div className="overflow-x-auto rounded-[var(--radius-button)] border border-line">
+        <div className="overflow-x-auto rounded-[var(--radius-card)] border border-line bg-bg/40">
           <table className="w-full text-sm min-w-[640px]">
-            <thead className="bg-bg">
-              <tr>
-                <th className="text-left text-[11px] font-semibold uppercase tracking-wide text-fg-muted px-3 py-2.5">
+            <thead>
+              <tr className="border-b border-line bg-surface/40">
+                <th className="text-left text-[10px] font-bold uppercase tracking-[0.14em] text-fg-faint px-4 py-3">
                   Concepto
                 </th>
-                <th className="text-right text-[11px] font-semibold uppercase tracking-wide text-fg-muted px-3 py-2.5 w-44">
+                <th className="text-right text-[10px] font-bold uppercase tracking-[0.14em] text-fg-faint px-4 py-3 w-48">
                   Valor reclamado
                 </th>
-                <th className="text-left text-[11px] font-semibold uppercase tracking-wide text-fg-muted px-3 py-2.5 w-36">
+                <th className="text-left text-[10px] font-bold uppercase tracking-[0.14em] text-fg-faint px-4 py-3 w-36">
                   Soporte
                 </th>
-                <th className="text-left text-[11px] font-semibold uppercase tracking-wide text-fg-muted px-3 py-2.5">
+                <th className="text-left text-[10px] font-bold uppercase tracking-[0.14em] text-fg-faint px-4 py-3">
                   Observación
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-line">
+            <tbody>
               {rubros.map((r, idx) => {
                 const n = parseMonto(r.monto);
-                const soporteKey = (r.soporte ?? '').toLowerCase();
-                const soporte = SOPORTE_TONE[soporteKey];
                 return (
-                  <tr key={idx} className="hover:bg-bg/40 transition-colors">
-                    <td className="px-3 py-3 text-[14px] text-fg font-medium">
-                      {RUBRO_LABEL[r.rubro ?? ''] ?? r.rubro ?? '—'}
+                  <tr
+                    key={idx}
+                    className="group relative border-b border-line/60 last:border-b-0 transition-colors hover:bg-accent-soft/30"
+                  >
+                    <td className="px-4 py-3.5 text-[14px] text-fg font-medium relative">
+                      <span
+                        aria-hidden
+                        className="absolute left-0 top-2 bottom-2 w-px bg-accent origin-top scale-y-0 transition-transform duration-300 group-hover:scale-y-100"
+                      />
+                      <span className="inline-flex items-center gap-2">
+                        <span aria-hidden className="inline-block w-1 h-1 rounded-full bg-accent/60" />
+                        {RUBRO_LABEL[r.rubro ?? ''] ?? r.rubro ?? '—'}
+                      </span>
                     </td>
-                    <td className="px-3 py-3 text-right text-[14px] text-fg tabular-nums font-semibold">
+                    <td
+                      className={`px-4 py-3.5 text-right tabular-nums font-bold ${
+                        n !== null ? 'text-fg text-[15px]' : 'text-fg-faint text-[13px] italic'
+                      }`}
+                    >
                       {n !== null ? formatCOP(n) : r.monto ?? '—'}
                     </td>
-                    <td className="px-3 py-3">
-                      {soporte ? (
-                        <span
-                          className={`inline-flex items-center px-2 h-6 text-[10px] font-semibold uppercase tracking-wide border rounded-[var(--radius-button)] ${soporte.className}`}
-                        >
-                          {soporte.label}
-                        </span>
-                      ) : r.soporte ? (
-                        <span className="text-[13px] text-fg-muted">{r.soporte}</span>
-                      ) : (
-                        <span className="text-[13px] text-fg-faint">—</span>
-                      )}
+                    <td className="px-4 py-3.5">
+                      <SoporteChip soporte={r.soporte} />
                     </td>
-                    <td className="px-3 py-3 text-[13px] text-fg-muted leading-snug text-justify">
-                      {!n ? 'Valor sin cuantificar en la demanda' : '—'}
+                    <td className="px-4 py-3.5 text-[12.5px] text-fg-muted leading-snug">
+                      {!n ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          <AlertTriangle
+                            className="w-3 h-3 text-amber-300 shrink-0"
+                            strokeWidth={2}
+                          />
+                          Sin cuantificar en la demanda
+                        </span>
+                      ) : (
+                        <span className="text-fg-faint">—</span>
+                      )}
                     </td>
                   </tr>
                 );
               })}
               {showSubtotal && (
-                <tr className="bg-bg/60">
-                  <td className="px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-fg-muted">
-                    Subtotal calculado
+                <tr className="bg-gradient-to-r from-accent-soft/70 via-accent-soft/30 to-transparent border-t-2 border-accent-line">
+                  <td className="px-4 py-4">
+                    <span className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-accent">
+                      <span aria-hidden className="h-px w-4 bg-accent" />
+                      Subtotal calculado
+                    </span>
                   </td>
-                  <td className="px-3 py-3 text-right text-[14px] text-fg tabular-nums font-bold">
+                  <td className="px-4 py-4 text-right text-[1.125rem] text-fg tabular-nums font-bold">
                     {formatCOP(subtotal)}
                   </td>
-                  <td className="px-3 py-3" colSpan={2}>
-                    <span className="text-[11px] text-fg-faint italic">
-                      Suma de los rubros con valor identificado; verificable por el abogado.
+                  <td className="px-4 py-4" colSpan={2}>
+                    <span className="text-[11px] text-fg-muted italic leading-snug">
+                      Suma de los rubros con valor identificado · verificable por el abogado.
                     </span>
                   </td>
                 </tr>

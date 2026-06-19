@@ -141,13 +141,11 @@ export function ResultadoView({
       />
 
       {estado.kind === 'listo' && (
-        <div className="flex items-center justify-end gap-2 flex-wrap">
-          <DescargarPdfsBotones
-            hechos={estado.hechos}
-            analisis={estado.analisis}
-            title={caso.title}
-          />
-        </div>
+        <DescargarPdfsBotones
+          hechos={estado.hechos}
+          analisis={estado.analisis}
+          title={caso.title}
+        />
       )}
 
       {estado.kind === 'procesando' && <ProcessingPanel mensaje={estado.mensaje} />}
@@ -464,59 +462,168 @@ function DescargarPdfsBotones({
   }
 
   return (
-    <div className="flex flex-col items-end gap-1">
-      <div className="flex items-center gap-2">
-        <PdfButton
+    <div className="flex flex-col gap-3.5">
+      <div className="flex items-center gap-4">
+        <span aria-hidden className="h-px flex-1 bg-gradient-to-r from-transparent to-accent-line" />
+        <span className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.32em] text-fg-muted">
+          <span aria-hidden className="text-accent">§</span>
+          Anexos exportables
+          <span aria-hidden className="text-accent">§</span>
+        </span>
+        <span aria-hidden className="h-px flex-1 bg-gradient-to-l from-transparent to-accent-line" />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <ExportCard
           onClick={() => handleClick('ficha')}
           loading={busy === 'ficha'}
           disabled={!hechos || busy !== null}
-          label="Ficha del caso"
+          numeral="I"
+          title="Ficha del caso"
+          description="Resumen ejecutivo · hechos, partes y daños alegados."
+          icon={
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="9" y1="13" x2="15" y2="13" />
+              <line x1="9" y1="17" x2="13" y2="17" />
+            </svg>
+          }
         />
-        <PdfButton
+        <ExportCard
           onClick={() => handleClick('memo')}
           loading={busy === 'memo'}
           disabled={!analisis || busy !== null}
-          label="Memorando"
+          numeral="II"
+          title="Memorando"
+          description="Análisis jurídico estructurado · estrategia defensiva."
           primary
+          icon={
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="m14.5 12.5-8 8a2.12 2.12 0 1 1-3-3l8-8" />
+              <path d="m16 16 6-6" />
+              <path d="m8 8 6-6" />
+              <path d="m9 7 8 8" />
+              <path d="m21 11-8-8" />
+            </svg>
+          }
         />
       </div>
+
       {error && (
-        <span className="text-[11px] text-red-400 max-w-xs text-right">{error}</span>
+        <span className="text-[11px] text-rose-400" role="alert">
+          {error}
+        </span>
       )}
     </div>
   );
 }
 
-function PdfButton({
+function ExportCard({
   onClick,
   loading,
   disabled,
-  label,
+  numeral,
+  title,
+  description,
+  icon,
   primary,
 }: {
   onClick: () => void;
   loading: boolean;
   disabled: boolean;
-  label: string;
+  numeral: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
   primary?: boolean;
 }) {
-  const base =
-    'h-9 inline-flex items-center gap-2 px-3 text-sm font-semibold border rounded-[var(--radius-button)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
-  const styles = primary
-    ? 'bg-accent text-fg border-accent hover:bg-accent-hover hover:border-accent-hover'
-    : 'bg-transparent text-fg-muted border-line hover:text-fg hover:border-fg-muted';
   return (
-    <button type="button" onClick={onClick} disabled={disabled} className={`${base} ${styles}`}>
-      {loading ? (
-        <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-      ) : (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-          <polyline points="7 10 12 15 17 10" />
-          <line x1="12" y1="15" x2="12" y2="3" />
-        </svg>
-      )}
-      {label}
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`group relative flex items-stretch text-left rounded-[var(--radius-card)] border transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
+        primary
+          ? 'bg-accent-soft border-accent-line hover:border-accent enabled:hover:-translate-y-0.5 enabled:hover:shadow-[0_10px_24px_rgba(128,24,23,0.35)]'
+          : 'bg-surface/60 border-line hover:border-accent-line enabled:hover:-translate-y-0.5 enabled:hover:shadow-[0_10px_24px_rgba(0,0,0,0.3)]'
+      }`}
+    >
+      {/* Sello del icono */}
+      <div className="shrink-0 flex items-center pl-4 pr-3 py-4">
+        <span
+          className={`inline-flex items-center justify-center w-11 h-11 rounded-full border transition-transform duration-300 ${
+            primary
+              ? 'bg-accent text-fg border-accent'
+              : 'bg-bg text-fg border-accent-line'
+          } ${disabled ? '' : 'group-hover:rotate-[-4deg]'}`}
+          aria-hidden
+        >
+          {icon}
+        </span>
+      </div>
+
+      {/* Contenido */}
+      <div className="flex-1 min-w-0 flex flex-col justify-center py-4 pr-4">
+        <span className="text-[9px] font-bold uppercase tracking-[0.24em] text-accent">
+          Anexo · {numeral}
+        </span>
+        <h4 className="text-[1rem] font-semibold leading-tight text-fg mt-1 tracking-tight">
+          {title}
+        </h4>
+        <p className="text-[11.5px] leading-snug text-fg-muted mt-1.5">{description}</p>
+      </div>
+
+      {/* Botón circular de descarga */}
+      <div className="shrink-0 flex items-center pr-4">
+        <span
+          className={`inline-flex items-center justify-center w-9 h-9 rounded-full border transition-all duration-200 ${
+            primary
+              ? 'bg-bg/40 text-fg border-fg/20 group-hover:bg-fg group-hover:text-accent group-hover:border-fg'
+              : 'bg-transparent text-fg-muted border-line group-hover:bg-accent group-hover:text-fg group-hover:border-accent'
+          } ${disabled ? '' : 'group-hover:translate-y-0.5'}`}
+          aria-hidden
+        >
+          {loading ? (
+            <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 3v13" />
+              <polyline points="7 11 12 16 17 11" />
+              <line x1="5" y1="21" x2="19" y2="21" />
+            </svg>
+          )}
+        </span>
+      </div>
     </button>
   );
 }

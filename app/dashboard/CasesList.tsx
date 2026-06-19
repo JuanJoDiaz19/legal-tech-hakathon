@@ -12,23 +12,23 @@ export type Case = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  Activo: 'bg-accent-soft text-fg border-accent-line',
-  'En revisión': 'bg-surface text-fg-muted border-line',
-  Archivado: 'bg-transparent text-fg-faint border-line',
+  Activo: 'text-accent bg-accent-soft',
+  'En revisión': 'text-fg-muted bg-bg/60',
+  Archivado: 'text-fg-faint bg-bg/60',
 };
 
 const ANALYSIS_STATUS: Record<string, { label: string; className: string }> = {
   done: {
     label: 'Análisis listo',
-    className: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30',
+    className: 'text-emerald-300 bg-emerald-500/10',
   },
   pending: {
     label: 'Procesando',
-    className: 'bg-amber-500/10 text-amber-300 border-amber-500/30',
+    className: 'text-amber-300 bg-amber-500/10',
   },
   error: {
     label: 'Error',
-    className: 'bg-rose-500/10 text-rose-300 border-rose-500/30',
+    className: 'text-rose-300 bg-rose-500/10',
   },
 };
 
@@ -85,7 +85,6 @@ function bucketFor(date: Date, today: Date): { key: GroupKey; label: string; ord
   const m = day.getMonth();
   const sameYear = y === t0.getFullYear();
   const label = sameYear ? `${MES_LARGO[m]}` : `${MES_LARGO[m]} ${y}`;
-  // Older groups: order by negative timestamp (more recent first)
   const order = 1000 + (t0.getFullYear() - y) * 12 + (t0.getMonth() - m);
   return { key: `${y}-${String(m).padStart(2, '0')}`, label, order };
 }
@@ -178,26 +177,29 @@ export function CasesList({ cases }: { cases: Case[] }) {
   const groups = groupCases(cases);
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-12">
       {groups.map((group) => (
         <section key={group.key} aria-labelledby={`group-${group.key}`}>
-          <header className="flex items-baseline justify-between gap-3 mb-4 pb-2.5 border-b border-line">
-            <div className="flex items-baseline gap-3">
+          <header className="flex items-center gap-4 mb-6">
+            <span aria-hidden className="h-px flex-1 bg-gradient-to-r from-transparent to-accent-line" />
+            <div className="inline-flex items-center gap-2.5">
+              <span aria-hidden className="text-accent">§</span>
               <h3
                 id={`group-${group.key}`}
-                className="text-[11px] font-semibold uppercase tracking-[0.18em] text-fg-muted"
+                className="font-wordmark italic text-[1.125rem] text-fg leading-none"
               >
                 {group.label}
               </h3>
-              <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-[10px] font-semibold tabular-nums text-fg-faint bg-bg border border-line rounded-full">
+              <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-[10px] font-semibold tabular-nums text-accent bg-accent-soft border border-accent-line rounded-full">
                 {group.cases.length}
               </span>
             </div>
+            <span aria-hidden className="h-px flex-1 bg-gradient-to-l from-transparent to-accent-line" />
           </header>
 
-          <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {group.cases.map((c, idx) => {
-              const badgeClass = STATUS_STYLES[c.status] ?? STATUS_STYLES.Activo;
+              const statusToneClass = STATUS_STYLES[c.status] ?? STATUS_STYLES.Activo;
               const analysis = c.analysis_status ? ANALYSIS_STATUS[c.analysis_status] : null;
               return (
                 <li
@@ -207,42 +209,39 @@ export function CasesList({ cases }: { cases: Case[] }) {
                 >
                   <Link
                     href={`/dashboard/casos/${c.id}/resultado`}
-                    className="group relative block h-full bg-surface border border-line rounded-[var(--radius-card)] p-5 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-fg-muted hover:-translate-y-0.5"
+                    className="group relative block h-full bg-surface border border-line rounded-[var(--radius-card)] p-5 transition-all duration-200 ease-out hover:border-accent-line hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(0,0,0,0.3)]"
                   >
-                    <span
-                      aria-hidden
-                      className="pointer-events-none absolute left-0 top-4 bottom-4 w-px bg-accent origin-top scale-y-0 transition-transform duration-300 group-hover:scale-y-100"
-                    />
                     <div className="flex items-start justify-between gap-3 mb-3">
-                      <h3 className="text-base font-semibold text-fg leading-snug line-clamp-2">
+                      <h3 className="text-base font-semibold leading-snug text-fg tracking-tight line-clamp-2">
                         {c.title}
                       </h3>
                       <span
-                        className={`shrink-0 inline-flex items-center px-2 h-6 text-[11px] font-medium border rounded-[var(--radius-button)] ${badgeClass}`}
+                        className={`shrink-0 inline-flex items-center px-2 h-5 text-[10px] font-semibold uppercase tracking-wide rounded-full ${statusToneClass}`}
                       >
                         {c.status}
                       </span>
                     </div>
 
                     {c.client && (
-                      <p className="text-sm text-fg-muted mb-3">
+                      <p className="text-[13px] text-fg-muted mb-2">
                         <span className="text-fg-faint">Cliente · </span>
                         {c.client}
                       </p>
                     )}
 
                     {c.description && (
-                      <p className="text-sm text-fg-muted line-clamp-3 mb-4">{c.description}</p>
+                      <p className="text-[13px] leading-relaxed text-fg-muted line-clamp-3 mb-4">
+                        {c.description}
+                      </p>
                     )}
 
-                    <div className="flex items-center justify-between gap-2 pt-3 border-t border-line">
-                      <span className="text-xs text-fg-faint">
-                        <span className="text-fg-faint/80">Cargado · </span>
+                    <div className="flex items-center justify-between gap-2 pt-3 border-t border-line/60">
+                      <span className="text-[11px] text-fg-faint tabular-nums">
                         {formatDate(c.created_at)}
                       </span>
                       {analysis && (
                         <span
-                          className={`inline-flex items-center gap-1.5 px-2 h-5 text-[10px] font-semibold uppercase tracking-wide border rounded-[var(--radius-button)] ${analysis.className}`}
+                          className={`inline-flex items-center gap-1.5 px-2 h-5 text-[10px] font-semibold uppercase tracking-wide rounded-full ${analysis.className}`}
                         >
                           {c.analysis_status === 'pending' && (
                             <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
