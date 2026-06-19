@@ -79,9 +79,13 @@ export function FeaturesGrid() {
     <section
       id="analisis"
       aria-labelledby="features-heading"
-      className="px-6 md:px-12 xl:px-24 py-16 md:py-24 border-t border-line"
+      className="relative px-6 md:px-12 xl:px-24 py-16 md:py-24 border-t border-line scroll-mt-[80px]"
     >
-      <div className="max-w-[1280px] mx-auto">
+      <div aria-hidden className="hidden md:block absolute inset-0 pointer-events-none">
+        <span className="absolute top-0 bottom-0 w-px bg-white/[0.04]" style={{ left: '33%' }} />
+        <span className="absolute top-0 bottom-0 w-px bg-white/[0.04]" style={{ left: '66%' }} />
+      </div>
+      <div className="relative max-w-[1280px] mx-auto">
         <div className="mb-12 max-w-[720px]">
           <span className="block mb-4 text-xs font-semibold tracking-[0.15em] uppercase text-accent">
             Cuatro ejes de análisis
@@ -98,7 +102,7 @@ export function FeaturesGrid() {
           {FEATURES.map((f) => (
             <article
               key={f.title}
-              className="group bg-surface border border-line rounded-[var(--radius-card)] overflow-hidden transition-colors hover:border-fg-muted"
+              className="group bg-surface/60 backdrop-blur-sm border border-line rounded-[var(--radius-card)] overflow-hidden transition-colors hover:border-fg-muted"
             >
               <div className="relative aspect-[16/9] bg-bg border-b border-line overflow-hidden">
                 <Image

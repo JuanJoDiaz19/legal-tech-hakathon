@@ -13,9 +13,13 @@ export function TrustSection() {
   return (
     <section
       aria-labelledby="trust-heading"
-      className="px-6 md:px-12 xl:px-24 py-16 md:py-24 border-t border-line"
+      className="relative px-6 md:px-12 xl:px-24 py-16 md:py-24 border-t border-line overflow-hidden"
     >
-      <div className="max-w-[1280px] mx-auto">
+      <div
+        aria-hidden
+        className="absolute -top-20 left-1/2 -translate-x-1/2 w-[480px] h-[280px] bg-accent/10 blur-3xl pointer-events-none"
+      />
+      <div className="relative max-w-[1280px] mx-auto">
         <div className="max-w-[720px] mb-14">
           <span className="block mb-4 text-xs font-semibold tracking-[0.15em] uppercase text-accent">
             Respaldo institucional
@@ -38,7 +42,7 @@ export function TrustSection() {
               key={s.label}
               className={`p-8 md:p-10 ${i < STATS.length - 1 ? 'border-b border-line md:border-b-0 md:border-r md:border-r-accent' : ''}`}
             >
-              <div className="text-[2.5rem] md:text-[3.25rem] font-bold leading-none tracking-[-0.03em] text-fg">
+              <div className="text-[2.5rem] md:text-[3.25rem] font-bold leading-none tracking-[-0.03em] bg-gradient-to-b from-fg to-fg/70 bg-clip-text text-transparent">
                 {s.value}
               </div>
               <p className="mt-3.5 text-sm leading-snug text-fg-muted max-w-[260px]">{s.label}</p>

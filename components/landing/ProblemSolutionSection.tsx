@@ -43,8 +43,12 @@ export function ProblemSolutionSection() {
     <section
       id="como-funciona"
       aria-labelledby="ps-heading"
-      className="px-6 md:px-12 xl:px-24 py-16 md:py-24 border-t border-line"
+      className="relative px-6 md:px-12 xl:px-24 py-16 md:py-24 border-t border-line scroll-mt-[80px]"
     >
+      <span
+        aria-hidden
+        className="absolute top-0 left-6 md:left-12 xl:left-24 h-px w-32 bg-gradient-to-r from-accent to-transparent"
+      />
       <div className="max-w-[1280px] mx-auto">
         <div className="mb-14 max-w-[720px]">
           <span className="block mb-4 text-xs font-semibold tracking-[0.15em] uppercase text-accent">
@@ -78,7 +82,7 @@ export function ProblemSolutionSection() {
             </ul>
           </div>
 
-          <div className="flex flex-col pl-6 md:pl-8 border-l-2 border-accent">
+          <div className="flex flex-col pl-6 md:pl-8 border-l border-accent/60">
             <div className="mb-6 text-xs font-semibold tracking-[0.15em] uppercase text-accent">
               Con Mobius
             </div>

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { LogIn, LayoutDashboard } from 'lucide-react';
+import { LogIn, LayoutDashboard, Menu, X } from 'lucide-react';
 
 interface NavLink {
   href: string;
@@ -15,25 +15,50 @@ const LINKS: readonly NavLink[] = [
   { href: '#analisis', label: 'Análisis' },
 ] as const;
 
-const BTN_GHOST =
-  'h-[38px] inline-flex items-center px-4 bg-transparent text-fg-muted border border-line rounded-[var(--radius-button)] text-sm font-medium transition-colors hover:text-fg hover:border-fg-muted';
-
-const BTN_CTA_ACCENT =
-  'h-[38px] inline-flex items-center gap-2 px-4 bg-accent text-fg-muted border border-accent rounded-[var(--radius-button)] text-sm font-semibold transition-colors hover:bg-accent-hover hover:border-accent-hover hover:text-fg';
-
 export function Navbar({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (open) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
 
   const ctaHref = isLoggedIn ? '/dashboard' : '/login';
   const ctaLabel = isLoggedIn ? 'Ver casos' : 'Iniciar sesión';
   const CtaIcon = isLoggedIn ? LayoutDashboard : LogIn;
 
+  const navBase =
+    'fixed top-0 inset-x-0 z-50 transition-colors duration-300 px-6 md:px-12 xl:px-24';
+  const navState =
+    scrolled || open
+      ? 'bg-bg/90 backdrop-blur-md border-b border-line'
+      : 'bg-transparent border-b border-transparent';
+
   return (
     <>
-      <nav
-        aria-label="Navegación principal"
-        className="sticky top-0 z-50 bg-bg border-b border-line px-6 md:px-12 xl:px-24"
-      >
+      <nav aria-label="Navegación principal" className={`${navBase} ${navState}`}>
         <div className="max-w-[1280px] mx-auto h-[68px] md:h-[76px] flex items-center justify-between">
           <a
             href="#top"
@@ -48,7 +73,7 @@ export function Navbar({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
               priority
               className="h-7 md:h-8 w-auto block"
             />
-            <span aria-hidden className="w-px h-[22px] bg-line" />
+            <span aria-hidden className="w-px h-[22px] bg-white/20" />
             <span className="font-wordmark text-[1.625rem] md:text-[1.875rem] font-medium tracking-tight text-fg leading-none">
               Mobius
             </span>
@@ -59,7 +84,7 @@ export function Navbar({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
               <a
                 key={l.href}
                 href={l.href}
-                className="text-sm font-medium text-fg-muted transition-colors hover:text-fg"
+                className="text-base font-medium text-fg/85 transition-colors hover:text-accent"
               >
                 {l.label}
               </a>
@@ -67,7 +92,10 @@ export function Navbar({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
           </div>
 
           <div className="hidden lg:flex items-center gap-3">
-            <Link href={ctaHref} className={BTN_CTA_ACCENT}>
+            <Link
+              href={ctaHref}
+              className="h-[38px] inline-flex items-center gap-2 px-5 rounded-full bg-accent text-fg border border-accent text-sm font-semibold transition-colors hover:bg-accent-hover hover:border-accent-hover"
+            >
               <CtaIcon className="w-4 h-4" />
               {ctaLabel}
             </Link>
@@ -79,47 +107,38 @@ export function Navbar({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
             aria-expanded={open}
             aria-controls="mobile-nav"
             onClick={() => setOpen((v) => !v)}
-            className="lg:hidden inline-flex items-center justify-center w-10 h-10 bg-transparent text-fg border border-line rounded-[var(--radius-button)] transition-colors hover:border-fg-muted"
+            className="lg:hidden inline-flex items-center justify-center w-10 h-10 bg-transparent text-fg border border-white/20 rounded-[var(--radius-button)] transition-colors hover:border-fg-muted"
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            >
-              {open ? <path d="M18 6 6 18M6 6l12 12" /> : <path d="M4 6h16M4 12h16M4 18h16" />}
-            </svg>
+            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </nav>
 
       {open && (
-        <div id="mobile-nav" className="lg:hidden bg-bg border-b border-line px-6 md:px-12 xl:px-24">
-          <div className="max-w-[1280px] mx-auto pt-4 pb-6 flex flex-col gap-2">
-            {LINKS.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                onClick={() => setOpen(false)}
-                className="block py-3 text-base font-medium text-fg-muted border-b border-line transition-colors hover:text-fg"
-              >
-                {l.label}
-              </a>
-            ))}
-            <div className="flex flex-col gap-2 mt-3">
-              <Link
-                href={ctaHref}
-                onClick={() => setOpen(false)}
-                className="h-[44px] inline-flex items-center justify-center gap-2 bg-accent text-fg-muted border border-accent rounded-[var(--radius-button)] text-sm font-semibold transition-colors hover:bg-accent-hover hover:border-accent-hover hover:text-fg"
-              >
-                <CtaIcon className="w-4 h-4" />
-                {ctaLabel}
-              </Link>
-            </div>
-          </div>
+        <div
+          id="mobile-nav"
+          className="lg:hidden fixed inset-0 z-40 bg-bg/95 backdrop-blur-xl flex flex-col items-center justify-center gap-8 pt-20"
+          role="dialog"
+          aria-modal="true"
+        >
+          {LINKS.map((l) => (
+            <a
+              key={l.href}
+              href={l.href}
+              onClick={() => setOpen(false)}
+              className="text-2xl font-medium text-fg/90 transition-colors hover:text-accent"
+            >
+              {l.label}
+            </a>
+          ))}
+          <Link
+            href={ctaHref}
+            onClick={() => setOpen(false)}
+            className="mt-4 h-12 inline-flex items-center justify-center gap-2 px-6 rounded-full bg-accent text-fg border border-accent text-sm font-semibold transition-colors hover:bg-accent-hover hover:border-accent-hover"
+          >
+            <CtaIcon className="w-4 h-4" />
+            {ctaLabel}
+          </Link>
         </div>
       )}
     </>
