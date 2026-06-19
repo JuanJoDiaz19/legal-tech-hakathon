@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { LogIn, LayoutDashboard } from 'lucide-react';
 
 interface NavLink {
   href: string;
@@ -17,11 +18,15 @@ const LINKS: readonly NavLink[] = [
 const BTN_GHOST =
   'h-[38px] inline-flex items-center px-4 bg-transparent text-fg-muted border border-line rounded-[var(--radius-button)] text-sm font-medium transition-colors hover:text-fg hover:border-fg-muted';
 
+const BTN_CTA_ACCENT =
+  'h-[38px] inline-flex items-center gap-2 px-4 bg-accent text-fg-muted border border-accent rounded-[var(--radius-button)] text-sm font-semibold transition-colors hover:bg-accent-hover hover:border-accent-hover hover:text-fg';
+
 export function Navbar({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
   const [open, setOpen] = useState(false);
 
   const ctaHref = isLoggedIn ? '/dashboard' : '/login';
   const ctaLabel = isLoggedIn ? 'Ver casos' : 'Iniciar sesión';
+  const CtaIcon = isLoggedIn ? LayoutDashboard : LogIn;
 
   return (
     <>
@@ -62,7 +67,8 @@ export function Navbar({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
           </div>
 
           <div className="hidden lg:flex items-center gap-3">
-            <Link href={ctaHref} className={BTN_GHOST}>
+            <Link href={ctaHref} className={BTN_CTA_ACCENT}>
+              <CtaIcon className="w-4 h-4" />
               {ctaLabel}
             </Link>
           </div>
@@ -107,8 +113,9 @@ export function Navbar({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
               <Link
                 href={ctaHref}
                 onClick={() => setOpen(false)}
-                className={BTN_GHOST}
+                className="h-[44px] inline-flex items-center justify-center gap-2 bg-accent text-fg-muted border border-accent rounded-[var(--radius-button)] text-sm font-semibold transition-colors hover:bg-accent-hover hover:border-accent-hover hover:text-fg"
               >
+                <CtaIcon className="w-4 h-4" />
                 {ctaLabel}
               </Link>
             </div>

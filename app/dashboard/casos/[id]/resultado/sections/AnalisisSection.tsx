@@ -1,67 +1,21 @@
-import type { AnalisisJuridico } from '@/lib/api';
-
-type Normativa = { norma?: string; citas?: string[] };
-type Regimen = {
-  regimen?: string;
-  explicacion?: string;
-  normativa_aplicable?: Normativa[];
-  carga_de_la_prueba?: string;
-  diligencia_exonera?: boolean;
-  clasificacion_contestable?: boolean;
-  estrategia_reclasificacion?: string | null;
-  citas?: string[];
-};
-
-type ElementosNexo = {
-  conducta?: string;
-  dano?: string;
-  nexo_causal?: string;
-  puntos_debiles_del_nexo?: string;
-};
-type Causal = {
-  causal?: string;
-  viabilidad?: 'alta' | 'media' | 'baja' | string;
-  fundamento_factico?: string;
-  que_probar?: string;
-  citas?: string[];
-};
-type Exoneracion = {
-  elementos_nexo?: ElementosNexo;
-  causales_exoneracion?: Causal[];
-  citas?: string[];
-};
-
-type Rubro = {
-  rubro?: string;
-  monto_reclamado?: string | null;
-  soportado?: 'si' | 'parcial' | 'no' | string;
-  debilidad?: string;
-  ataque?: string;
-  pruebas_de_descargo?: string[];
-  citas?: string[];
-};
-type Perjuicio = {
-  rubros?: Rubro[];
-  observacion_juramento_estimatorio?: string | null;
-  citas?: string[];
-};
-
-type Vinculacion = {
-  tipo?: 'llamamiento_en_garantia' | 'denuncia_del_pleito' | string;
-  destinatario?: string;
-  justificacion?: string;
-  viabilidad?: 'alta' | 'media' | 'baja' | string;
-  requisitos?: string;
-  citas?: string[];
-};
-type Terceros = { vinculaciones?: Vinculacion[]; citas?: string[] };
+import type {
+  AnalisisJuridico,
+  RegimenAnalisis,
+  ExoneracionAnalisis,
+  PerjuicioAnalisis,
+  RubroPerjuicio,
+  TercerosAnalisis,
+  Vinculacion,
+} from '@/lib/api';
 
 const REGIMEN_LABEL: Record<string, string> = {
   subjetiva_culpa_probada: 'Subjetiva · culpa probada',
   subjetiva_culpa_presunta: 'Subjetiva · culpa presunta',
+  actividad_peligrosa: 'Objetiva · actividad peligrosa',
   objetiva_actividad_peligrosa: 'Objetiva · actividad peligrosa',
   objetiva_producto: 'Objetiva · producto',
   medica: 'Responsabilidad médica',
+  seguro_soat: 'Seguro SOAT',
   otro: 'Otro',
 };
 
@@ -75,8 +29,11 @@ const RUBRO_LABEL: Record<string, string> = {
   dano_emergente: 'Daño emergente',
   lucro_cesante: 'Lucro cesante',
   dano_moral: 'Daño moral',
+  perjuicios_morales: 'Perjuicios morales',
   dano_vida_relacion: 'Daño a la vida de relación',
+  dano_a_la_vida_de_relacion: 'Daño a la vida de relación',
   dano_salud: 'Daño a la salud',
+  dano_a_la_salud: 'Daño a la salud',
   otro: 'Otro',
 };
 
@@ -97,17 +54,12 @@ export function AnalisisSection({ analisis }: { analisis?: AnalisisJuridico | nu
     );
   }
 
-  const regimen = analisis.regimen as Regimen | undefined;
-  const exoneracion = analisis.exoneracion as Exoneracion | undefined;
-  const perjuicio = analisis.perjuicio as Perjuicio | undefined;
-  const terceros = analisis.terceros as Terceros | undefined;
-
   return (
     <div className="flex flex-col gap-8">
-      {regimen && <RegimenCard regimen={regimen} />}
-      {exoneracion && <ExoneracionCard exoneracion={exoneracion} />}
-      {perjuicio && <PerjuicioCard perjuicio={perjuicio} />}
-      {terceros && <TercerosCard terceros={terceros} />}
+      {analisis.regimen && <RegimenCard regimen={analisis.regimen} />}
+      {analisis.exoneracion && <ExoneracionCard exoneracion={analisis.exoneracion} />}
+      {analisis.perjuicio && <PerjuicioCard perjuicio={analisis.perjuicio} />}
+      {analisis.terceros && <TercerosCard terceros={analisis.terceros} />}
     </div>
   );
 }
@@ -116,15 +68,25 @@ export function AnalisisSection({ analisis }: { analisis?: AnalisisJuridico | nu
 // Régimen
 // =============================================================================
 
-function RegimenCard({ regimen }: { regimen: Regimen }) {
-  const label = REGIMEN_LABEL[regimen.regimen ?? ''] ?? regimen.regimen ?? 'No determinado';
+function RegimenCard({ regimen }: { regimen: RegimenAnalisis }) {
+  const label =
+    regimen.etiqueta_legible ??
+    REGIMEN_LABEL[regimen.regimen ?? ''] ??
+    regimen.regimen ??
+    'No determinado';
+  const altLabel = regimen.regimen_alternativo
+    ? REGIMEN_LABEL[regimen.regimen_alternativo] ?? regimen.regimen_alternativo
+    : null;
   return (
     <StepCard step={1} title="Régimen de responsabilidad">
       <div className="flex flex-col gap-5">
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center px-3 h-8 text-sm font-semibold bg-accent-soft text-fg border border-accent-line rounded-[var(--radius-button)]">
             {label}
           </span>
+          {regimen.nivel_confianza && (
+            <ConfianzaBadge nivel={regimen.nivel_confianza} />
+          )}
           {regimen.clasificacion_contestable && (
             <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2 h-6 rounded-[var(--radius-button)]">
               <DotIcon />
@@ -133,8 +95,8 @@ function RegimenCard({ regimen }: { regimen: Regimen }) {
           )}
         </div>
 
-        {regimen.explicacion && (
-          <p className="text-[15px] leading-7 text-fg">{regimen.explicacion}</p>
+        {regimen.fundamento_factico && (
+          <Field label="Fundamento fáctico">{regimen.fundamento_factico}</Field>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -148,11 +110,17 @@ function RegimenCard({ regimen }: { regimen: Regimen }) {
           </KeyValueCard>
         </div>
 
-        {regimen.normativa_aplicable && regimen.normativa_aplicable.length > 0 && (
+        {regimen.consecuencia_probatoria && (
+          <KeyValueCard label="Consecuencia probatoria" accent>
+            {regimen.consecuencia_probatoria}
+          </KeyValueCard>
+        )}
+
+        {regimen.fundamento_juridico && regimen.fundamento_juridico.length > 0 && (
           <div>
-            <SubHeading>Normativa aplicable</SubHeading>
+            <SubHeading>Fundamento jurídico</SubHeading>
             <ul className="flex flex-col gap-2">
-              {regimen.normativa_aplicable.map((n, idx) => (
+              {regimen.fundamento_juridico.map((n, idx) => (
                 <li
                   key={idx}
                   className="bg-bg border border-line rounded-[var(--radius-button)] p-3 flex items-start justify-between gap-3"
@@ -162,6 +130,24 @@ function RegimenCard({ regimen }: { regimen: Regimen }) {
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {(altLabel || regimen.por_que_no_otro_regimen) && (
+          <div className="bg-bg border border-line rounded-[var(--radius-card)] p-4 flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <FieldLabel>Régimen alternativo</FieldLabel>
+              {altLabel && (
+                <span className="inline-flex items-center px-2 h-5 text-[10px] font-semibold uppercase tracking-wide border border-line bg-surface text-fg-muted rounded-[var(--radius-button)]">
+                  {altLabel}
+                </span>
+              )}
+            </div>
+            {regimen.por_que_no_otro_regimen && (
+              <p className="text-sm leading-6 text-fg-muted">
+                {regimen.por_que_no_otro_regimen}
+              </p>
+            )}
           </div>
         )}
 
@@ -181,7 +167,7 @@ function RegimenCard({ regimen }: { regimen: Regimen }) {
 // Exoneración
 // =============================================================================
 
-function ExoneracionCard({ exoneracion }: { exoneracion: Exoneracion }) {
+function ExoneracionCard({ exoneracion }: { exoneracion: ExoneracionAnalisis }) {
   const nexo = exoneracion.elementos_nexo;
   const causales = exoneracion.causales_exoneracion ?? [];
   const nexoItems: Array<[string, string | undefined]> = [
@@ -230,7 +216,11 @@ function ExoneracionCard({ exoneracion }: { exoneracion: Exoneracion }) {
   );
 }
 
-function CausalRow({ causal }: { causal: Causal }) {
+function CausalRow({
+  causal,
+}: {
+  causal: NonNullable<ExoneracionAnalisis['causales_exoneracion']>[number];
+}) {
   const label = CAUSAL_LABEL[causal.causal ?? ''] ?? causal.causal ?? '—';
   return (
     <div className="bg-bg border border-line rounded-[var(--radius-card)] p-4 flex flex-col gap-3">
@@ -241,9 +231,7 @@ function CausalRow({ causal }: { causal: Causal }) {
       {causal.fundamento_factico && (
         <Field label="Fundamento fáctico">{causal.fundamento_factico}</Field>
       )}
-      {causal.que_probar && (
-        <Field label="Qué probar">{causal.que_probar}</Field>
-      )}
+      {causal.que_probar && <Field label="Qué probar">{causal.que_probar}</Field>}
       {causal.citas && causal.citas.length > 0 && (
         <div className="pt-1">
           <Citas ids={causal.citas} />
@@ -257,7 +245,7 @@ function CausalRow({ causal }: { causal: Causal }) {
 // Perjuicio
 // =============================================================================
 
-function PerjuicioCard({ perjuicio }: { perjuicio: Perjuicio }) {
+function PerjuicioCard({ perjuicio }: { perjuicio: PerjuicioAnalisis }) {
   const rubros = perjuicio.rubros ?? [];
   return (
     <StepCard step={3} title="Cuestionamiento del perjuicio">
@@ -272,9 +260,15 @@ function PerjuicioCard({ perjuicio }: { perjuicio: Perjuicio }) {
           <p className="text-sm text-fg-muted italic">Sin rubros analizados.</p>
         )}
 
-        {perjuicio.observacion_juramento_estimatorio && (
-          <Callout tone="warning" title="Juramento estimatorio (art. 206 CGP)">
-            {perjuicio.observacion_juramento_estimatorio}
+        {perjuicio.objecion_juramento_estimatorio && (
+          <Callout tone="warning" title="Objeción al juramento estimatorio (art. 206 CGP)">
+            {perjuicio.objecion_juramento_estimatorio}
+          </Callout>
+        )}
+
+        {perjuicio.recordatorio_carga_prueba && (
+          <Callout tone="accent" title="Recordatorio · carga de la prueba (art. 167 CGP)">
+            {perjuicio.recordatorio_carga_prueba}
           </Callout>
         )}
 
@@ -284,23 +278,32 @@ function PerjuicioCard({ perjuicio }: { perjuicio: Perjuicio }) {
   );
 }
 
-function RubroRow({ rubro }: { rubro: Rubro }) {
+function RubroRow({ rubro }: { rubro: RubroPerjuicio }) {
   const label = RUBRO_LABEL[rubro.rubro ?? ''] ?? rubro.rubro ?? '—';
+  const monto = rubro.monto_reclamado && rubro.monto_reclamado !== 'null' ? rubro.monto_reclamado : null;
   return (
     <div className="bg-bg border border-line rounded-[var(--radius-card)] p-4 flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">
           <h4 className="text-sm font-semibold text-fg">{label}</h4>
-          {rubro.monto_reclamado && (
-            <span className="text-sm text-fg-muted tabular-nums">
-              {rubro.monto_reclamado}
-            </span>
+          {monto && (
+            <span className="text-sm text-fg-muted tabular-nums">{monto}</span>
           )}
         </div>
         <SoporteBadge soporte={rubro.soportado} />
       </div>
-      {rubro.debilidad && <Field label="Debilidad">{rubro.debilidad}</Field>}
-      {rubro.ataque && <Field label="Ataque" accent>{rubro.ataque}</Field>}
+      {rubro.estandar_probatorio && (
+        <Field label="Estándar probatorio">{rubro.estandar_probatorio}</Field>
+      )}
+      {rubro.deficiencia && <Field label="Deficiencia">{rubro.deficiencia}</Field>}
+      {rubro.ataque && (
+        <Field label="Ataque" accent>
+          {rubro.ataque}
+        </Field>
+      )}
+      {rubro.herramienta_procesal && (
+        <Field label="Herramienta procesal">{rubro.herramienta_procesal}</Field>
+      )}
       {rubro.pruebas_de_descargo && rubro.pruebas_de_descargo.length > 0 && (
         <div>
           <FieldLabel>Pruebas de descargo</FieldLabel>
@@ -327,7 +330,7 @@ function RubroRow({ rubro }: { rubro: Rubro }) {
 // Terceros
 // =============================================================================
 
-function TercerosCard({ terceros }: { terceros: Terceros }) {
+function TercerosCard({ terceros }: { terceros: TercerosAnalisis }) {
   const vinculaciones = terceros.vinculaciones ?? [];
   return (
     <StepCard step={4} title="Vinculación de terceros">
@@ -497,6 +500,22 @@ function Callout({
   );
 }
 
+function ConfianzaBadge({ nivel }: { nivel: string }) {
+  const map: Record<string, string> = {
+    alto: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30',
+    medio: 'bg-amber-500/10 text-amber-300 border-amber-500/30',
+    bajo: 'bg-rose-500/10 text-rose-300 border-rose-500/30',
+  };
+  const tone = map[nivel] ?? 'bg-bg text-fg-muted border-line';
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2 h-6 text-[10px] font-semibold uppercase tracking-wide border rounded-[var(--radius-button)] ${tone}`}
+    >
+      Confianza: {nivel}
+    </span>
+  );
+}
+
 function ViabilidadBadge({ viabilidad }: { viabilidad?: string }) {
   if (!viabilidad) return null;
   const map: Record<string, string> = {
@@ -528,6 +547,10 @@ function SoporteBadge({ soporte }: { soporte?: string }) {
     no: {
       tone: 'bg-rose-500/10 text-rose-300 border-rose-500/30',
       label: 'Sin soporte',
+    },
+    no_cuantificado: {
+      tone: 'bg-purple-500/10 text-purple-300 border-purple-500/30',
+      label: 'Sin cuantificar',
     },
   };
   const v = map[soporte] ?? { tone: 'bg-bg text-fg-muted border-line', label: soporte };
@@ -564,7 +587,7 @@ function Citas({ ids }: { ids?: string[] }) {
           key={id}
           className="inline-flex items-center px-1.5 h-5 text-[10px] font-mono font-semibold text-accent bg-accent-soft border border-accent-line rounded"
         >
-          {id}
+          {id.replace(/^\[|\]$/g, '')}
         </span>
       ))}
     </div>

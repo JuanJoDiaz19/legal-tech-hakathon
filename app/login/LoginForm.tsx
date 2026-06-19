@@ -2,13 +2,14 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { LogIn, Loader2 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 
 const INPUT_CLASS =
   'h-[44px] w-full bg-bg border border-line rounded-[var(--radius-button)] px-3 text-sm text-fg placeholder:text-fg-faint transition-colors focus:border-accent focus:outline-none';
 
 const BTN_PRIMARY =
-  'h-[44px] w-full inline-flex items-center justify-center px-4 bg-accent text-fg border border-accent rounded-[var(--radius-button)] text-sm font-semibold transition-colors hover:bg-accent-hover hover:border-accent-hover disabled:opacity-60 disabled:cursor-not-allowed';
+  'h-[44px] w-full inline-flex items-center justify-center gap-2 px-4 bg-accent text-fg border border-accent rounded-[var(--radius-button)] text-sm font-semibold transition-colors hover:bg-accent-hover hover:border-accent-hover disabled:opacity-60 disabled:cursor-not-allowed';
 
 export function LoginForm() {
   const router = useRouter();
@@ -80,7 +81,17 @@ export function LoginForm() {
       )}
 
       <button type="submit" disabled={loading} className={BTN_PRIMARY}>
-        {loading ? 'Ingresando…' : 'Iniciar sesión'}
+        {loading ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Ingresando…
+          </>
+        ) : (
+          <>
+            <LogIn className="w-4 h-4" />
+            Iniciar sesión
+          </>
+        )}
       </button>
     </form>
   );

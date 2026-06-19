@@ -2,10 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { LogOut, Loader2 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
-
-const BTN_GHOST =
-  'h-[38px] inline-flex items-center px-4 bg-transparent text-fg-muted border border-line rounded-[var(--radius-button)] text-sm font-medium transition-colors hover:text-fg hover:border-fg-muted disabled:opacity-60 disabled:cursor-not-allowed';
 
 export function LogoutButton() {
   const router = useRouter();
@@ -24,9 +22,15 @@ export function LogoutButton() {
       type="button"
       onClick={handleLogout}
       disabled={loading}
-      className={BTN_GHOST}
+      aria-label="Cerrar sesión"
+      title="Cerrar sesión"
+      className="inline-flex items-center justify-center w-10 h-10 bg-transparent text-accent border border-accent rounded-[var(--radius-button)] transition-colors hover:bg-accent-soft hover:border-accent-hover disabled:opacity-60 disabled:cursor-not-allowed"
     >
-      {loading ? 'Saliendo…' : 'Cerrar sesión'}
+      {loading ? (
+        <Loader2 className="w-4 h-4 animate-spin" />
+      ) : (
+        <LogOut className="w-4 h-4" />
+      )}
     </button>
   );
 }
