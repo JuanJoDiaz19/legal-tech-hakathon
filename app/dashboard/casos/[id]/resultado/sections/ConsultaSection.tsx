@@ -2,7 +2,72 @@
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Send, Loader2, Sparkles, User } from 'lucide-react';
-import type { AnalisisHechos, AnalisisJuridico } from '@/lib/api';
+import ReactMarkdown, { type Components } from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import type { ChatMessage as DbChatMessage } from '../ResultadoView';
+
+const chatComponents: Components = {
+  p: ({ children }) => (
+    <p className="my-2 first:mt-0 last:mb-0 text-justify">{children}</p>
+  ),
+  ul: ({ children }) => (
+    <ul className="list-disc pl-5 my-2 flex flex-col gap-1 marker:text-fg-faint">
+      {children}
+    </ul>
+  ),
+  ol: ({ children }) => (
+    <ol className="list-decimal pl-5 my-2 flex flex-col gap-1 marker:text-fg-faint">
+      {children}
+    </ol>
+  ),
+  li: ({ children }) => <li className="pl-0.5">{children}</li>,
+  strong: ({ children }) => (
+    <strong className="font-semibold text-fg">{children}</strong>
+  ),
+  em: ({ children }) => <em className="italic">{children}</em>,
+  h1: ({ children }) => (
+    <h3 className="text-[15px] font-semibold text-fg mt-3 mb-1.5">{children}</h3>
+  ),
+  h2: ({ children }) => (
+    <h3 className="text-[15px] font-semibold text-fg mt-3 mb-1.5">{children}</h3>
+  ),
+  h3: ({ children }) => (
+    <h4 className="text-sm font-semibold text-fg mt-3 mb-1">{children}</h4>
+  ),
+  blockquote: ({ children }) => (
+    <blockquote className="my-2 pl-3 border-l-2 border-accent text-fg-muted italic">
+      {children}
+    </blockquote>
+  ),
+  a: ({ href, children }) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer noopener"
+      className="text-accent underline decoration-accent/40 underline-offset-2 hover:decoration-accent"
+    >
+      {children}
+    </a>
+  ),
+  code: ({ children }) => (
+    <code className="bg-surface border border-line rounded px-1.5 py-0.5 text-[12.5px] font-mono">
+      {children}
+    </code>
+  ),
+  table: ({ children }) => (
+    <div className="my-3 overflow-x-auto rounded-[var(--radius-button)] border border-line">
+      <table className="w-full text-[13px]">{children}</table>
+    </div>
+  ),
+  th: ({ children }) => (
+    <th className="text-left text-[11px] font-semibold uppercase tracking-wide text-fg-muted px-3 py-2 bg-surface">
+      {children}
+    </th>
+  ),
+  td: ({ children }) => (
+    <td className="px-3 py-2 align-top border-t border-line">{children}</td>
+  ),
+};
 
 type Message = {
   id: string;
@@ -12,9 +77,9 @@ type Message = {
 };
 
 interface Props {
-  hechos?: AnalisisHechos;
-  analisis?: AnalisisJuridico | null;
+  caseId: string;
   caseTitle: string;
+  initialMessages: DbChatMessage[];
 }
 
 const SUGERENCIAS = [
@@ -24,8 +89,10 @@ const SUGERENCIAS = [
   '¿Qué causales de exoneración son más viables?',
 ];
 
-export function ConsultaSection({ hechos, analisis, caseTitle }: Props) {
-  const [messages, setMessages] = useState<Message[]>([]);
+export function ConsultaSection({ caseId, caseTitle, initialMessages }: Props) {
+  const [messages, setMessages] = useState<Message[]>(() =>
+    initialMessages.map((m) => ({ id: m.id, role: m.role, content: m.content })),
+  );
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -33,26 +100,6 @@ export function ConsultaSection({ hechos, analisis, caseTitle }: Props) {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
-
-  function buildAssistantStub(question: string): string {
-    const partes: string[] = [];
-    partes.push(
-      `Sobre **"${caseTitle}"** — y con base en el análisis ya generado:`,
-    );
-    if (analisis?.regimen?.etiqueta_legible) {
-      partes.push(
-        `· El régimen identificado es ${analisis.regimen.etiqueta_legible}, con consecuencias probatorias específicas para la defensa.`,
-      );
-    }
-    if (hechos?.resumen_factico) {
-      const corto = hechos.resumen_factico.slice(0, 220);
-      partes.push(`· Resumen fáctico considerado: ${corto}${hechos.resumen_factico.length > 220 ? '…' : ''}`);
-    }
-    partes.push(
-      `· Para responder con precisión a "${question}", es necesario conectar este panel con el backend de consultas. Mientras tanto, revisa las pestañas de Análisis, Hechos y Fuentes — ya contienen el insumo estructurado para esta pregunta.`,
-    );
-    return partes.join('\n\n');
-  }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -64,8 +111,9 @@ export function ConsultaSection({ hechos, analisis, caseTitle }: Props) {
       role: 'user',
       content: text,
     };
+    const assistantId = crypto.randomUUID();
     const pendingMsg: Message = {
-      id: crypto.randomUUID(),
+      id: assistantId,
       role: 'assistant',
       content: 'Analizando el expediente…',
       pending: true,
@@ -74,16 +122,73 @@ export function ConsultaSection({ hechos, analisis, caseTitle }: Props) {
     setInput('');
     setBusy(true);
 
-    await new Promise((r) => setTimeout(r, 900));
+    try {
+      const res = await fetch(
+        `/api/casos/${encodeURIComponent(caseId)}/consultar`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: text }),
+        },
+      );
 
-    setMessages((prev) =>
-      prev.map((m) =>
-        m.id === pendingMsg.id
-          ? { ...m, content: buildAssistantStub(text), pending: false }
-          : m,
-      ),
-    );
-    setBusy(false);
+      if (!res.ok || !res.body) {
+        let msg = `El servidor respondió ${res.status}.`;
+        try {
+          const data = await res.json();
+          if (data?.error) msg = data.error;
+        } catch {
+          /* respuesta sin JSON */
+        }
+        throw new Error(msg);
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let acc = '';
+      let firstChunk = true;
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        acc += decoder.decode(value, { stream: true });
+        const current = acc;
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantId
+              ? { ...m, content: current, pending: false }
+              : m,
+          ),
+        );
+        firstChunk = false;
+      }
+
+      if (firstChunk || !acc.trim()) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantId
+              ? {
+                  ...m,
+                  content: 'No se recibió respuesta del modelo.',
+                  pending: false,
+                }
+              : m,
+          ),
+        );
+      }
+    } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : 'Error al consultar el análisis.';
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistantId
+            ? { ...m, content: `⚠️ ${msg}`, pending: false }
+            : m,
+        ),
+      );
+    } finally {
+      setBusy(false);
+    }
   }
 
   function handleSugerencia(s: string) {
@@ -188,9 +293,15 @@ function MessageBubble({ message }: { message: Message }) {
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
             {message.content}
           </div>
-        ) : (
+        ) : isUser ? (
           <div className="text-[14px] leading-7 text-fg whitespace-pre-wrap text-justify">
             {message.content}
+          </div>
+        ) : (
+          <div className="text-[14px] leading-7 text-fg">
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={chatComponents}>
+              {message.content}
+            </ReactMarkdown>
           </div>
         )}
       </div>

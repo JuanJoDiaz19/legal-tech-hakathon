@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { createClient } from '@/utils/supabase/server';
 import { LogoutButton } from '../../../LogoutButton';
-import { ResultadoView, type CasoRow, type CaseDocument } from './ResultadoView';
+import { ResultadoView, type CasoRow, type CaseDocument, type ChatMessage } from './ResultadoView';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,27 +24,34 @@ export default async function ResultadoPage({
     redirect('/login');
   }
 
-  const [{ data: caso, error }, { data: documentsData }] = await Promise.all([
-    supabase
-      .from('cases')
-      .select(
-        'id, title, client, status, analysis_status, analysis, memo_markdown, analysis_error, created_at',
-      )
-      .eq('id', id)
-      .single(),
-    supabase
-      .from('case_documents')
-      .select('id, categoria, storage_path, filename, mime_type, size_bytes, created_at, uploaded_by')
-      .eq('case_id', id)
-      .order('categoria', { ascending: true })
-      .order('created_at', { ascending: true }),
-  ]);
+  const [{ data: caso, error }, { data: documentsData }, { data: chatData }] =
+    await Promise.all([
+      supabase
+        .from('cases')
+        .select(
+          'id, title, client, status, analysis_status, analysis, memo_markdown, analysis_error, created_at',
+        )
+        .eq('id', id)
+        .single(),
+      supabase
+        .from('case_documents')
+        .select('id, categoria, storage_path, filename, mime_type, size_bytes, created_at, uploaded_by')
+        .eq('case_id', id)
+        .order('categoria', { ascending: true })
+        .order('created_at', { ascending: true }),
+      supabase
+        .from('case_chat_messages')
+        .select('id, role, content, created_at')
+        .eq('case_id', id)
+        .order('created_at', { ascending: true }),
+    ]);
 
   if (error || !caso) {
     notFound();
   }
 
   const documents = (documentsData ?? []) as CaseDocument[];
+  const chatMessages = (chatData ?? []) as ChatMessage[];
 
   return (
     <main className="min-h-screen bg-bg">
@@ -90,7 +97,11 @@ export default async function ResultadoPage({
             Volver al panel
           </Link>
 
-          <ResultadoView caso={caso as CasoRow} documents={documents} />
+          <ResultadoView
+            caso={caso as CasoRow}
+            documents={documents}
+            chatMessages={chatMessages}
+          />
         </div>
       </section>
     </main>

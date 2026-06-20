@@ -46,6 +46,13 @@ export type CaseDocument = {
   uploaded_by: string;
 };
 
+export type ChatMessage = {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  created_at: string;
+};
+
 type Estado =
   | { kind: 'inicial' }
   | { kind: 'procesando'; mensaje: string }
@@ -59,9 +66,11 @@ type Tab = (typeof TABS)[number];
 export function ResultadoView({
   caso,
   documents,
+  chatMessages,
 }: {
   caso: CasoRow;
   documents: CaseDocument[];
+  chatMessages: ChatMessage[];
 }) {
   const [estado, setEstado] = useState<Estado>(() => {
     if (caso.analysis_status === 'done' && caso.analysis) {
@@ -241,9 +250,9 @@ export function ResultadoView({
               )}
               {tab === 'consulta' && (
                 <ConsultaSection
-                  hechos={estado.hechos}
-                  analisis={estado.analisis}
+                  caseId={caso.id}
                   caseTitle={caso.title}
+                  initialMessages={chatMessages}
                 />
               )}
             </div>
