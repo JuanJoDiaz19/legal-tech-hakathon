@@ -99,7 +99,7 @@ export function MemoSection({ markdown }: { markdown: string | null }) {
     );
   }
   return (
-    <article className="max-w-3xl prose-justify">
+    <article className="w-full">
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
         {markdown}
       </ReactMarkdown>

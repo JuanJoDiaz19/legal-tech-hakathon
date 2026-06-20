@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { AnimatedCounter } from './AnimatedCounter';
 
 interface Stat {
@@ -42,13 +41,15 @@ export function TrustSection() {
             </p>
           </div>
 
-          <figure className="relative aspect-[16/11] rounded-[var(--radius-card)] overflow-hidden border border-line shadow-[0_20px_60px_rgba(0,0,0,0.45)] group">
-            <Image
-              src="/foto-handshake.webp"
-              alt="Apretón de manos entre abogado y cliente — relación de confianza profesional"
-              fill
-              sizes="(min-width: 1024px) 45vw, 100vw"
-              className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+          <figure className="relative aspect-[16/11] rounded-[var(--radius-card)] overflow-hidden border border-line shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+            <video
+              src="/elenchos-respaldo.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="auto"
+              className="absolute inset-0 w-full h-full object-cover"
             />
             <div
               aria-hidden

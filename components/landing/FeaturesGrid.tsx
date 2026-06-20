@@ -33,7 +33,7 @@ const FEATURES: readonly Feature[] = [
     title: 'Régimen de responsabilidad',
     desc: 'Determina si la demanda fundamenta responsabilidad subjetiva (culpa probada) u objetiva (actividad peligrosa, riesgo creado). Define la carga de la prueba y el estándar defensivo.',
     image: '/features/regimen.png',
-    imageAlt: 'Análisis del régimen de responsabilidad aplicable',
+    imageAlt: 'Dos páginas de un código legal contrastadas por una IA, con párrafos delimitados y tarjetas de análisis al margen',
   },
   {
     icon: (
@@ -45,7 +45,7 @@ const FEATURES: readonly Feature[] = [
     title: 'Causales de exoneración',
     desc: 'Identifica indicios de culpa exclusiva de la víctima, fuerza mayor, caso fortuito o hecho determinante de un tercero en los hechos y pruebas aportados con la demanda.',
     image: '/features/exoneracion.png',
-    imageAlt: 'Identificación de causales de exoneración',
+    imageAlt: 'Página de una demanda con tres párrafos resaltados y tarjetas flotantes que identifican causales de exoneración',
   },
   {
     icon: (
@@ -57,8 +57,8 @@ const FEATURES: readonly Feature[] = [
     ),
     title: 'Cuestionamiento del perjuicio',
     desc: 'Revisa daño emergente, lucro cesante, daño moral y daño a la vida de relación. Señala conceptos sobrevalorados, periodos no acreditados o bases de cálculo cuestionables.',
-    image: '/foto-perjuicio-calculadora.jpeg',
-    imageAlt: 'Análisis cuantitativo de perjuicios — calculadora sobre documentos',
+    image: '/features/perjuicio.png',
+    imageAlt: 'Tabla de perjuicios con cifras tachadas en tinta oxblood y chips de recalculo conectados por vectores',
   },
   {
     icon: (
@@ -72,7 +72,7 @@ const FEATURES: readonly Feature[] = [
     title: 'Vinculación de terceros',
     desc: 'Detecta fabricantes, contratistas, empleadores u otras personas que deban ser llamadas en garantía o demandadas conjuntamente.',
     image: '/features/terceros.png',
-    imageAlt: 'Vinculación de terceros responsables',
+    imageAlt: 'Dossier central de demanda conectado por hilos a cuatro documentos periféricos que representan terceros vinculables',
   },
 ] as const;
 

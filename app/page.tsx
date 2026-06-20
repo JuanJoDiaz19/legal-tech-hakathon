@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/server';
 import { Navbar } from '@/components/landing/Navbar';
 import { HeroSection } from '@/components/landing/HeroSection';
 import { QuienesSomosSection } from '@/components/landing/QuienesSomosSection';
+import { ManifiestoVideo } from '@/components/landing/ManifiestoVideo';
 import { ComoFuncionaSection } from '@/components/landing/ComoFuncionaSection';
 import { ProblemSolutionSection } from '@/components/landing/ProblemSolutionSection';
 import { FeaturesGrid } from '@/components/landing/FeaturesGrid';
@@ -23,6 +24,7 @@ export default async function Home() {
       <main>
         <HeroSection />
         <QuienesSomosSection />
+        <ManifiestoVideo />
         <ComoFuncionaSection />
         <ProblemSolutionSection />
         <FeaturesGrid />
